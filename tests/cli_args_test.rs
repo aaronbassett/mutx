@@ -3,7 +3,7 @@ use predicates::prelude::*;
 
 #[test]
 fn test_help_message_shows() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
     cmd.arg("--help")
         .assert()
         .success()
@@ -12,7 +12,7 @@ fn test_help_message_shows() {
 
 #[test]
 fn test_requires_output_file() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
     cmd.assert()
         .failure()
         .stderr(predicate::str::contains("Output file required"));
@@ -20,7 +20,7 @@ fn test_requires_output_file() {
 
 #[test]
 fn test_version_flag() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
     cmd.arg("--version")
         .assert()
         .success()
