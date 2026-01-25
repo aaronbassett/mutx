@@ -1,8 +1,8 @@
 use crate::cli::Command;
 use anyhow::{bail, Result};
 use mutx::housekeep::{clean_backups, clean_locks, CleanBackupConfig, CleanLockConfig};
+use mutx::utils::parse_duration;
 use std::path::PathBuf;
-use std::time::Duration;
 
 pub fn execute_housekeep(cmd: Command) -> Result<()> {
     let Command::Housekeep {
@@ -15,7 +15,6 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
         keep_newest,
         dry_run,
         verbose,
-        json,
     } = cmd;
     let target_dir = dir.unwrap_or_else(|| PathBuf::from("."));
 
@@ -27,7 +26,10 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
 
     // Clean locks
     if do_clean_locks || all {
-        let duration = parse_duration_hours(&older_than)?;
+        let duration = match &older_than {
+            Some(s) => Some(parse_duration(s)?),
+            None => None,
+        };
         let config = CleanLockConfig {
             dir: target_dir.clone(),
             recursive,
@@ -37,27 +39,19 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
 
         let cleaned = clean_locks(&config)?;
 
-        if json {
+        for path in &cleaned {
             println!(
-                "{{\"operation\": \"clean_locks\", \"count\": {}, \"files\": {:?}}}",
-                cleaned.len(),
-                cleaned
+                "{}{}",
+                if dry_run {
+                    "[DRY RUN] Would delete: "
+                } else {
+                    "Deleted: "
+                },
+                path.display()
             );
-        } else {
-            for path in &cleaned {
-                println!(
-                    "{}{}",
-                    if dry_run {
-                        "[DRY RUN] Would delete: "
-                    } else {
-                        "Deleted: "
-                    },
-                    path.display()
-                );
-            }
-            if verbose || dry_run {
-                eprintln!("Cleaned {} lock file(s)", cleaned.len());
-            }
+        }
+        if verbose || dry_run {
+            eprintln!("Cleaned {} lock file(s)", cleaned.len());
         }
 
         total_cleaned += cleaned.len();
@@ -65,7 +59,10 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
 
     // Clean backups
     if do_clean_backups || all {
-        let duration = parse_duration_days(&older_than)?;
+        let duration = match &older_than {
+            Some(s) => Some(parse_duration(s)?),
+            None => None,
+        };
         let config = CleanBackupConfig {
             dir: target_dir.clone(),
             recursive,
@@ -76,65 +73,27 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
 
         let cleaned = clean_backups(&config)?;
 
-        if json {
+        for path in &cleaned {
             println!(
-                "{{\"operation\": \"clean_backups\", \"count\": {}, \"files\": {:?}}}",
-                cleaned.len(),
-                cleaned
+                "{}{}",
+                if dry_run {
+                    "[DRY RUN] Would delete: "
+                } else {
+                    "Deleted: "
+                },
+                path.display()
             );
-        } else {
-            for path in &cleaned {
-                println!(
-                    "{}{}",
-                    if dry_run {
-                        "[DRY RUN] Would delete: "
-                    } else {
-                        "Deleted: "
-                    },
-                    path.display()
-                );
-            }
-            if verbose || dry_run {
-                eprintln!("Cleaned {} backup file(s)", cleaned.len());
-            }
+        }
+        if verbose || dry_run {
+            eprintln!("Cleaned {} backup file(s)", cleaned.len());
         }
 
         total_cleaned += cleaned.len();
     }
 
-    if !json && verbose {
+    if verbose {
         eprintln!("Total: {} file(s) cleaned", total_cleaned);
     }
 
     Ok(())
-}
-
-fn parse_duration_hours(s: &Option<String>) -> Result<Option<Duration>> {
-    match s {
-        Some(s) => {
-            if s.ends_with('h') {
-                let hours: u64 = s[..s.len() - 1].parse()?;
-                Ok(Some(Duration::from_secs(hours * 3600)))
-            } else {
-                let hours: u64 = s.parse()?;
-                Ok(Some(Duration::from_secs(hours * 3600)))
-            }
-        }
-        None => Ok(None),
-    }
-}
-
-fn parse_duration_days(s: &Option<String>) -> Result<Option<Duration>> {
-    match s {
-        Some(s) => {
-            if s.ends_with('d') {
-                let days: u64 = s[..s.len() - 1].parse()?;
-                Ok(Some(Duration::from_secs(days * 86400)))
-            } else {
-                let days: u64 = s.parse()?;
-                Ok(Some(Duration::from_secs(days * 86400)))
-            }
-        }
-        None => Ok(None),
-    }
 }

@@ -5,6 +5,7 @@ pub mod lock;
 pub mod write;
 pub mod backup;
 pub mod housekeep;
+pub mod utils;
 
 // Re-export for convenience
 pub use error::{MutxError, Result};
