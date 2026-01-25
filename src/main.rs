@@ -7,8 +7,8 @@ fn main() {
     let args = cli::Args::parse();
 
     if let Err(err) = cli::run(args) {
-        let app_err = mutx::error::AppError::from_anyhow(err);
-        eprintln!("{}", app_err);
-        process::exit(app_err.exit_code());
+        // TODO: Update to use MutxError in Task 8
+        eprintln!("Error: {}", err);
+        process::exit(1);
     }
 }
