@@ -1,0 +1,46 @@
+# cargo-release configuration
+# https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
+
+# Pre-release checks
+[pre-release-checks]
+# Run tests before release
+test = true
+# Run cargo fmt check
+format = true
+# Run clippy
+clippy = true
+
+# Release configuration
+[release]
+# Don't publish to crates.io (using Homebrew instead)
+publish = false
+# Push to remote
+push = true
+# Create and push git tag
+tag = true
+# Tag prefix
+tag-prefix = "v"
+# Tag message
+tag-message = "chore: release {{crate_name}} version {{version}}"
+# Sign commits
+sign-commit = false
+# Sign tags
+sign-tag = false
+
+# Pre-release replacements and hooks
+[[pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "## \\[Unreleased\\]"
+replace = "## [Unreleased]\n\n## [{{version}}] - {{date}}"
+exactly = 1
+
+[[pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "\\[Unreleased\\]: https://github.com/aaronbassett/mutx/compare/v.*\\.\\.\\.HEAD"
+replace = "[Unreleased]: https://github.com/aaronbassett/mutx/compare/v{{version}}...HEAD\n[{{version}}]: https://github.com/aaronbassett/mutx/compare/v{{prev_version}}...v{{version}}"
+exactly = 1
+
+# Hooks
+[[pre-release-hook]]
+# Regenerate CHANGELOG.md with git-cliff before release
+command = ["git", "cliff", "--tag", "v{{version}}", "-o", "CHANGELOG.md"]
