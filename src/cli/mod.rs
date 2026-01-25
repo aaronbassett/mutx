@@ -1,15 +1,18 @@
 mod args;
+mod write_command;
 
 pub use args::{Args, Command};
-use anyhow::{bail, Result};
+use anyhow::Result;
 
 pub fn run(args: Args) -> Result<()> {
-    // Validate that OUTPUT is provided when no subcommand is given
-    if args.command.is_none() && args.output.is_none() {
-        bail!("error: the following required arguments were not provided:\n  <OUTPUT>\n\nUsage: mutx [OPTIONS] <OUTPUT>\n\nFor more information, try '--help'.");
+    match args.command {
+        Some(Command::Housekeep { .. }) => {
+            // TODO: Implement housekeep
+            eprintln!("Housekeep not yet implemented");
+            Ok(())
+        }
+        None => {
+            write_command::execute_write(args)
+        }
     }
-
-    // TODO: Implement
-    println!("Args: {:?}", args);
-    Ok(())
 }

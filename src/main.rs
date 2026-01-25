@@ -1,9 +1,14 @@
 use clap::Parser;
-use anyhow::Result;
+use std::process;
 
 mod cli;
 
-fn main() -> Result<()> {
+fn main() {
     let args = cli::Args::parse();
-    cli::run(args)
+
+    if let Err(err) = cli::run(args) {
+        let app_err = mutx::error::AppError::from_anyhow(err);
+        eprintln!("{}", app_err);
+        process::exit(app_err.exit_code());
+    }
 }
