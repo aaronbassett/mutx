@@ -24,16 +24,12 @@ pub struct Args {
     #[arg(long)]
     pub stream: bool,
 
-    /// Wait for lock (default)
-    #[arg(long, conflicts_with = "no_wait")]
-    pub wait: bool,
-
-    /// Fail immediately if locked
-    #[arg(long, conflicts_with = "wait")]
+    /// Fail immediately if locked (default: wait)
+    #[arg(long)]
     pub no_wait: bool,
 
-    /// Wait timeout in seconds (requires --wait)
-    #[arg(short = 't', long, value_name = "SECONDS", requires = "wait")]
+    /// Wait timeout in seconds (implies wait mode)
+    #[arg(short = 't', long, value_name = "SECONDS", conflicts_with = "no_wait")]
     pub timeout: Option<u64>,
 
     /// Custom lock file location
@@ -61,33 +57,9 @@ pub struct Args {
     #[arg(long, requires = "backup")]
     pub backup_timestamp: bool,
 
-    /// Set file permissions (octal, e.g., 0644)
-    #[arg(short = 'm', long, value_name = "OCTAL")]
-    pub mode: Option<String>,
-
-    /// Use umask default permissions instead of preserving
-    #[arg(long)]
-    pub no_preserve_mode: bool,
-
-    /// Preserve owner/group (requires privileges)
-    #[arg(long)]
-    pub preserve_owner: bool,
-
-    /// Preserve owner, ignore EPERM errors
-    #[arg(long, conflicts_with = "preserve_owner")]
-    pub try_preserve_owner: bool,
-
     /// Verbose output
     #[arg(short = 'v', action = clap::ArgAction::Count)]
     pub verbose: u8,
-
-    /// Suppress non-error output
-    #[arg(short = 'q', long, conflicts_with = "verbose")]
-    pub quiet: bool,
-
-    /// Structured JSON output
-    #[arg(long)]
-    pub json: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -114,7 +86,7 @@ pub enum Command {
         #[arg(short = 'r', long)]
         recursive: bool,
 
-        /// Age threshold (e.g., "2h" for locks, "7d" for backups)
+        /// Age threshold (e.g., "2h", "7d", "30m")
         #[arg(long, value_name = "DURATION")]
         older_than: Option<String>,
 
@@ -129,9 +101,5 @@ pub enum Command {
         /// Verbose output
         #[arg(short = 'v', long)]
         verbose: bool,
-
-        /// Structured JSON output
-        #[arg(long)]
-        json: bool,
     },
 }
