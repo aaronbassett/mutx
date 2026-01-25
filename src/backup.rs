@@ -1,52 +1,129 @@
-use anyhow::{Context, Result};
+use crate::error::{MutxError, Result};
+use chrono::Local;
 use std::fs;
 use std::path::{Path, PathBuf};
+use tracing::debug;
 
 #[derive(Debug, Clone)]
 pub struct BackupConfig {
+    pub source: PathBuf,
     pub suffix: String,
+    pub directory: Option<PathBuf>,
     pub timestamp: bool,
-    pub backup_dir: Option<PathBuf>,
 }
 
-/// Create a backup of the target file
-pub fn create_backup(target: &Path, config: &BackupConfig) -> Result<PathBuf> {
-    // Skip if target doesn't exist
-    if !target.exists() {
-        return Ok(PathBuf::new());
+/// Create a backup of the specified file using atomic operations
+pub fn create_backup(config: &BackupConfig) -> Result<PathBuf> {
+    let source = &config.source;
+
+    // Verify source exists
+    if !source.exists() {
+        return Err(MutxError::PathNotFound(source.clone()));
+    }
+
+    if !source.is_file() {
+        return Err(MutxError::NotAFile(source.clone()));
     }
 
     // Generate backup filename
-    let filename = target
+    let backup_path = generate_backup_path(config)?;
+
+    // Ensure backup directory exists
+    if let Some(parent) = backup_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| MutxError::BackupFailed {
+                path: source.clone(),
+                source: e,
+            })?;
+    }
+
+    debug!("Creating atomic backup: {} -> {}", source.display(), backup_path.display());
+
+    // Atomic backup using copy-to-temp + rename strategy
+    let temp_backup = backup_path.with_extension("tmp");
+
+    // Copy to temporary file
+    fs::copy(source, &temp_backup)
+        .map_err(|e| MutxError::BackupFailed {
+            path: source.clone(),
+            source: e,
+        })?;
+
+    // Atomically rename temp to final backup name
+    fs::rename(&temp_backup, &backup_path)
+        .map_err(|e| {
+            // Cleanup temp file on failure
+            let _ = fs::remove_file(&temp_backup);
+            MutxError::BackupFailed {
+                path: source.clone(),
+                source: e,
+            }
+        })?;
+
+    debug!("Backup created: {}", backup_path.display());
+    Ok(backup_path)
+}
+
+fn generate_backup_path(config: &BackupConfig) -> Result<PathBuf> {
+    let filename = config.source
         .file_name()
-        .context("Invalid target filename")?
-        .to_str()
-        .context("Filename is not valid UTF-8")?;
+        .ok_or_else(|| MutxError::Other("Invalid source filename".to_string()))?
+        .to_string_lossy();
 
     let backup_name = if config.timestamp {
-        let timestamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let timestamp = Local::now().format("%Y%m%d-%H%M%S");
         format!("{}.{}{}", filename, timestamp, config.suffix)
     } else {
         format!("{}{}", filename, config.suffix)
     };
 
-    // Determine backup location
-    let backup_path = if let Some(ref backup_dir) = config.backup_dir {
-        if !backup_dir.exists() {
-            anyhow::bail!(
-                "Backup directory does not exist: {}\nHint: Create it first: mkdir -p {}",
-                backup_dir.display(),
-                backup_dir.display()
-            );
-        }
-        backup_dir.join(backup_name)
+    let backup_path = if let Some(dir) = &config.directory {
+        dir.join(backup_name)
     } else {
-        target.with_file_name(backup_name)
+        config.source
+            .parent()
+            .ok_or_else(|| MutxError::Other("Source file has no parent directory".to_string()))?
+            .join(backup_name)
     };
 
-    // Create backup using atomic rename
-    fs::copy(target, &backup_path)
-        .with_context(|| format!("Failed to create backup: {}", backup_path.display()))?;
-
     Ok(backup_path)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_generate_backup_path_simple() {
+        let temp = TempDir::new().unwrap();
+        let source = temp.path().join("test.txt");
+
+        let config = BackupConfig {
+            source,
+            suffix: ".bak".to_string(),
+            directory: None,
+            timestamp: false,
+        };
+
+        let path = generate_backup_path(&config).unwrap();
+        assert_eq!(path.file_name().unwrap().to_str().unwrap(), "test.txt.bak");
+    }
+
+    #[test]
+    fn test_generate_backup_path_with_directory() {
+        let temp = TempDir::new().unwrap();
+        let source = temp.path().join("test.txt");
+        let backup_dir = temp.path().join("backups");
+
+        let config = BackupConfig {
+            source,
+            suffix: ".bak".to_string(),
+            directory: Some(backup_dir.clone()),
+            timestamp: false,
+        };
+
+        let path = generate_backup_path(&config).unwrap();
+        assert_eq!(path.parent().unwrap(), backup_dir);
+    }
 }
