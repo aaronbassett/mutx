@@ -2,7 +2,7 @@ mod args;
 mod housekeep_command;
 mod write_command;
 
-use anyhow::Result;
+use mutx::Result;
 pub use args::{Args, Command};
 
 pub fn run(args: Args) -> Result<()> {

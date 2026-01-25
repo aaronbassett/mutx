@@ -9,12 +9,13 @@ fn test_simple_backup_creation() {
     fs::write(&target, "original content").unwrap();
 
     let config = BackupConfig {
+        source: target.clone(),
         suffix: ".backup".to_string(),
+        directory: None,
         timestamp: false,
-        backup_dir: None,
     };
 
-    create_backup(&target, &config).unwrap();
+    create_backup(&config).unwrap();
 
     let backup_path = target.with_extension("txt.backup");
     assert!(backup_path.exists());
@@ -31,12 +32,13 @@ fn test_backup_with_timestamp() {
     fs::write(&target, "original").unwrap();
 
     let config = BackupConfig {
+        source: target.clone(),
         suffix: ".backup".to_string(),
+        directory: None,
         timestamp: true,
-        backup_dir: None,
     };
 
-    let backup_path = create_backup(&target, &config).unwrap();
+    let backup_path = create_backup(&config).unwrap();
 
     assert!(backup_path.exists());
     assert!(backup_path
@@ -64,12 +66,13 @@ fn test_backup_to_directory() {
     fs::write(&target, "original").unwrap();
 
     let config = BackupConfig {
+        source: target.clone(),
         suffix: ".backup".to_string(),
+        directory: Some(backup_dir.clone()),
         timestamp: false,
-        backup_dir: Some(backup_dir.clone()),
     };
 
-    create_backup(&target, &config).unwrap();
+    create_backup(&config).unwrap();
 
     let backup_path = backup_dir.join("test.txt.backup");
     assert!(backup_path.exists());
@@ -77,19 +80,17 @@ fn test_backup_to_directory() {
 }
 
 #[test]
-fn test_backup_nonexistent_file_skips() {
+fn test_backup_nonexistent_file_fails() {
     let dir = TempDir::new().unwrap();
     let target = dir.path().join("nonexistent.txt");
 
     let config = BackupConfig {
+        source: target.clone(),
         suffix: ".backup".to_string(),
+        directory: None,
         timestamp: false,
-        backup_dir: None,
     };
 
-    let result = create_backup(&target, &config);
-    assert!(result.is_ok());
-
-    let backup_path = target.with_extension("txt.backup");
-    assert!(!backup_path.exists());
+    let result = create_backup(&config);
+    assert!(result.is_err());
 }

@@ -1,12 +1,12 @@
 use crate::cli::Args;
-use anyhow::{Context, Result};
-use mutx::{create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, WriteMode};
+use mutx::{create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, WriteMode, MutxError, Result};
 use std::fs::File;
 use std::io::{self, Read};
 use std::time::Duration;
 
 pub fn execute_write(args: Args) -> Result<()> {
-    let output = args.output.context("Output file required")?;
+    let output = args.output
+        .ok_or_else(|| MutxError::Other("Output file required".to_string()))?;
 
     // Determine lock strategy
     let lock_strategy = if args.no_wait {
@@ -25,7 +25,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     });
 
     // Acquire lock
-    let _lock = FileLock::acquire(&lock_path, lock_strategy).context("Failed to acquire lock")?;
+    let _lock = FileLock::acquire(&lock_path, lock_strategy)?;
 
     if args.verbose > 0 {
         eprintln!("Lock acquired: {}", lock_path.display());
@@ -34,13 +34,14 @@ pub fn execute_write(args: Args) -> Result<()> {
     // Create backup if requested
     if args.backup {
         let backup_config = BackupConfig {
+            source: output.clone(),
             suffix: args.backup_suffix,
+            directory: args.backup_dir,
             timestamp: args.backup_timestamp,
-            backup_dir: args.backup_dir,
         };
 
-        let backup_path = create_backup(&output, &backup_config)?;
-        if args.verbose > 0 && backup_path.exists() {
+        let backup_path = create_backup(&backup_config)?;
+        if args.verbose > 0 {
             eprintln!("Backup created: {}", backup_path.display());
         }
     }
@@ -59,7 +60,10 @@ pub fn execute_write(args: Args) -> Result<()> {
     let mut input: Box<dyn Read> = if let Some(input_file) = args.input {
         Box::new(
             File::open(&input_file)
-                .with_context(|| format!("Failed to open input file: {}", input_file.display()))?,
+                .map_err(|e| MutxError::ReadFailed {
+                    path: input_file,
+                    source: e,
+                })?
         )
     } else {
         Box::new(io::stdin())

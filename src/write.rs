@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use crate::error::{MutxError, Result};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -37,17 +37,21 @@ impl AtomicWriter {
                 // Initialize temp file on first write
                 if self.temp_file.is_none() {
                     self.temp_file = Some(
-                        atomic_write_file::AtomicWriteFile::open(&self.target).with_context(
-                            || format!("Failed to create temp file for: {}", self.target.display()),
-                        )?,
+                        atomic_write_file::AtomicWriteFile::open(&self.target)
+                            .map_err(|e| MutxError::WriteFailed {
+                                path: self.target.clone(),
+                                source: e,
+                            })?
                     );
                 }
 
-                self.temp_file
-                    .as_mut()
-                    .unwrap()
-                    .write_all(buf)
-                    .with_context(|| "Failed to write to temp file")?;
+                if let Some(temp) = self.temp_file.as_mut() {
+                    temp.write_all(buf)
+                        .map_err(|e| MutxError::WriteFailed {
+                            path: self.target.clone(),
+                            source: e,
+                        })?;
+                }
                 Ok(())
             }
         }
@@ -58,31 +62,42 @@ impl AtomicWriter {
         match self.mode {
             WriteMode::Simple => {
                 let mut temp = atomic_write_file::AtomicWriteFile::open(&self.target)
-                    .with_context(|| {
-                        format!("Failed to create temp file for: {}", self.target.display())
+                    .map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
                     })?;
 
                 temp.write_all(&self.buffer)
-                    .with_context(|| "Failed to write to temp file")?;
+                    .map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
+                    })?;
 
-                temp.commit().with_context(|| {
-                    format!("Failed to commit write to: {}", self.target.display())
-                })?;
+                temp.commit()
+                    .map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
+                    })?;
             }
             WriteMode::Streaming => {
                 if let Some(temp) = self.temp_file.take() {
-                    temp.commit().with_context(|| {
-                        format!("Failed to commit write to: {}", self.target.display())
-                    })?;
+                    temp.commit()
+                        .map_err(|e| MutxError::WriteFailed {
+                            path: self.target.clone(),
+                            source: e,
+                        })?;
                 } else {
                     // No writes happened, create empty file
                     let temp = atomic_write_file::AtomicWriteFile::open(&self.target)
-                        .with_context(|| {
-                            format!("Failed to create temp file for: {}", self.target.display())
+                        .map_err(|e| MutxError::WriteFailed {
+                            path: self.target.clone(),
+                            source: e,
                         })?;
-                    temp.commit().with_context(|| {
-                        format!("Failed to commit write to: {}", self.target.display())
-                    })?;
+                    temp.commit()
+                        .map_err(|e| MutxError::WriteFailed {
+                            path: self.target.clone(),
+                            source: e,
+                        })?;
                 }
             }
         }
