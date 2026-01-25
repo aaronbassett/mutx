@@ -11,6 +11,23 @@ pub fn execute_write(args: Args) -> Result<()> {
         .output
         .ok_or_else(|| MutxError::Other("Output file required".to_string()))?;
 
+    // Validate input file exists if provided
+    if let Some(input_path) = &args.input {
+        if !input_path.exists() {
+            return Err(MutxError::PathNotFound(input_path.clone()));
+        }
+        if !input_path.is_file() {
+            return Err(MutxError::NotAFile(input_path.clone()));
+        }
+    }
+
+    // Validate backup directory is a directory if provided
+    if let Some(backup_dir) = &args.backup_dir {
+        if backup_dir.exists() && !backup_dir.is_dir() {
+            return Err(MutxError::NotADirectory(backup_dir.clone()));
+        }
+    }
+
     // Determine lock strategy
     let lock_strategy = if args.no_wait {
         LockStrategy::NoWait
