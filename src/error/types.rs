@@ -6,54 +6,31 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum MutxError {
     #[error("Failed to acquire lock on {path}: timeout after {duration:?}")]
-    LockTimeout {
-        path: PathBuf,
-        duration: Duration,
-    },
+    LockTimeout { path: PathBuf, duration: Duration },
 
     #[error("Failed to acquire lock on {0}: file is locked by another process")]
     LockWouldBlock(PathBuf),
 
     #[error("Failed to create lock file {path}: {source}")]
-    LockCreationFailed {
-        path: PathBuf,
-        source: io::Error,
-    },
+    LockCreationFailed { path: PathBuf, source: io::Error },
 
     #[error("Failed to acquire lock on {path}: {source}")]
-    LockAcquisitionFailed {
-        path: PathBuf,
-        source: io::Error,
-    },
+    LockAcquisitionFailed { path: PathBuf, source: io::Error },
 
     #[error("Failed to write to {path}: {source}")]
-    WriteFailed {
-        path: PathBuf,
-        source: io::Error,
-    },
+    WriteFailed { path: PathBuf, source: io::Error },
 
     #[error("Failed to create backup of {path}: {source}")]
-    BackupFailed {
-        path: PathBuf,
-        source: io::Error,
-    },
+    BackupFailed { path: PathBuf, source: io::Error },
 
     #[error("Failed to read from {path}: {source}")]
-    ReadFailed {
-        path: PathBuf,
-        source: io::Error,
-    },
+    ReadFailed { path: PathBuf, source: io::Error },
 
     #[error("Invalid duration format '{input}': {message}")]
-    InvalidDuration {
-        input: String,
-        message: String,
-    },
+    InvalidDuration { input: String, message: String },
 
     #[error("Invalid file permissions '{input}': must be octal (e.g., 0644)")]
-    InvalidPermissions {
-        input: String,
-    },
+    InvalidPermissions { input: String },
 
     #[error("Path does not exist: {0}")]
     PathNotFound(PathBuf),
@@ -80,8 +57,7 @@ pub enum MutxError {
 impl MutxError {
     pub fn exit_code(&self) -> i32 {
         match self {
-            MutxError::LockTimeout { .. } |
-            MutxError::LockWouldBlock(_) => 2,
+            MutxError::LockTimeout { .. } | MutxError::LockWouldBlock(_) => 2,
             MutxError::Interrupted => 3,
             MutxError::PermissionDenied(_) => 1,
             MutxError::Io(e) if e.kind() == io::ErrorKind::PermissionDenied => 1,

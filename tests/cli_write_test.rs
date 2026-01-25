@@ -8,7 +8,7 @@ fn test_write_from_stdin() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("output.txt");
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg(output.to_str().unwrap())
         .write_stdin("hello world")
         .assert()
@@ -25,7 +25,7 @@ fn test_write_from_file() {
 
     fs::write(&input, "file content").unwrap();
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--input")
         .arg(input.to_str().unwrap())
         .arg(output.to_str().unwrap())
@@ -40,7 +40,7 @@ fn test_streaming_mode() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("output.txt");
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--stream")
         .arg(output.to_str().unwrap())
         .write_stdin("streamed content")
@@ -55,7 +55,7 @@ fn test_empty_input_creates_empty_file() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("empty.txt");
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg(output.to_str().unwrap())
         .write_stdin("")
         .assert()
@@ -72,7 +72,7 @@ fn test_backup_creation() {
 
     fs::write(&output, "original").unwrap();
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--backup")
         .arg(output.to_str().unwrap())
         .write_stdin("updated")
@@ -103,7 +103,7 @@ fn test_lock_no_wait_fails_when_locked() {
 
     thread::sleep(Duration::from_millis(100));
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--no-wait")
         .arg(output.to_str().unwrap())
         .write_stdin("should fail")

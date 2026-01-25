@@ -1,8 +1,8 @@
 use mutx::lock::{FileLock, LockStrategy};
 use std::fs;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use tempfile::TempDir;
@@ -36,7 +36,10 @@ fn test_lock_cleanup_race_condition() {
     t1.join().unwrap();
     t2.join().unwrap();
 
-    assert!(success.load(Ordering::SeqCst), "Second lock acquisition should succeed");
+    assert!(
+        success.load(Ordering::SeqCst),
+        "Second lock acquisition should succeed"
+    );
 }
 
 #[test]

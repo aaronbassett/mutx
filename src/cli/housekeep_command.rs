@@ -1,7 +1,7 @@
 use crate::cli::Command;
-use mutx::{MutxError, Result};
 use mutx::housekeep::{clean_backups, clean_locks, CleanBackupConfig, CleanLockConfig};
 use mutx::utils::parse_duration;
+use mutx::{MutxError, Result};
 use std::path::PathBuf;
 
 pub fn execute_housekeep(cmd: Command) -> Result<()> {
@@ -19,7 +19,9 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
     let target_dir = dir.unwrap_or_else(|| PathBuf::from("."));
 
     if !do_clean_locks && !do_clean_backups && !all {
-        return Err(MutxError::Other("Specify at least one operation: --clean-locks, --clean-backups, or --all".to_string()));
+        return Err(MutxError::Other(
+            "Specify at least one operation: --clean-locks, --clean-backups, or --all".to_string(),
+        ));
     }
 
     let mut total_cleaned = 0;

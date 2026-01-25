@@ -16,8 +16,7 @@ fn main() {
     if let Err(e) = cli::run(args) {
         eprintln!("Error: {}", e);
         let exit_code = match e {
-            MutxError::LockTimeout { .. } |
-            MutxError::LockWouldBlock(_) => 2,
+            MutxError::LockTimeout { .. } | MutxError::LockWouldBlock(_) => 2,
             MutxError::Interrupted => 3,
             _ => e.exit_code(),
         };

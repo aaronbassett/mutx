@@ -22,9 +22,7 @@ fn test_clean_locks_handles_concurrent_deletion() {
 
     // Start cleanup in background
     let config_clone = config.clone();
-    let handle = thread::spawn(move || {
-        clean_locks(&config_clone)
-    });
+    let handle = thread::spawn(move || clean_locks(&config_clone));
 
     // Delete the file while cleanup is running (simulate TOCTOU)
     thread::sleep(Duration::from_millis(10));
@@ -32,5 +30,8 @@ fn test_clean_locks_handles_concurrent_deletion() {
 
     // Should not panic, should handle gracefully
     let result = handle.join().unwrap();
-    assert!(result.is_ok(), "Cleanup should handle concurrent deletion gracefully");
+    assert!(
+        result.is_ok(),
+        "Cleanup should handle concurrent deletion gracefully"
+    );
 }

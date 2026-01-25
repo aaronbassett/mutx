@@ -1,4 +1,4 @@
-use mutx::error::{MutxError, ErrorKind};
+use mutx::error::{ErrorKind, MutxError};
 use std::io;
 
 #[test]

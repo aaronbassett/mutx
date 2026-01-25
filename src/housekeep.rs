@@ -142,11 +142,10 @@ fn visit_directory<F>(dir: &Path, recursive: bool, visitor: &mut F) -> Result<()
 where
     F: FnMut(&Path) -> Result<()>,
 {
-    let entries = fs::read_dir(dir)
-        .map_err(|e| MutxError::ReadFailed {
-            path: dir.to_path_buf(),
-            source: e,
-        })?;
+    let entries = fs::read_dir(dir).map_err(|e| MutxError::ReadFailed {
+        path: dir.to_path_buf(),
+        source: e,
+    })?;
 
     for entry in entries {
         let entry = entry.map_err(|e| MutxError::Io(e))?;
@@ -194,10 +193,8 @@ fn extract_base_filename(path: &Path) -> String {
 fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {
     // Check age filter first
     if let Some(max_age) = older_than {
-        let metadata = fs::metadata(lock_path)
-            .map_err(|e| MutxError::Io(e))?;
-        let mtime = metadata.modified()
-            .map_err(|e| MutxError::Io(e))?;
+        let metadata = fs::metadata(lock_path).map_err(|e| MutxError::Io(e))?;
+        let mtime = metadata.modified().map_err(|e| MutxError::Io(e))?;
         if let Ok(elapsed) = SystemTime::now().duration_since(mtime) {
             if elapsed < max_age {
                 return Ok(false);
@@ -206,8 +203,7 @@ fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {
     }
 
     // Try to acquire lock - if successful, it's orphaned
-    let file = File::open(lock_path)
-        .map_err(|e| MutxError::Io(e))?;
+    let file = File::open(lock_path).map_err(|e| MutxError::Io(e))?;
 
     match file.try_lock_exclusive() {
         Ok(_) => {

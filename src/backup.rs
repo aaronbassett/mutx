@@ -30,42 +30,44 @@ pub fn create_backup(config: &BackupConfig) -> Result<PathBuf> {
 
     // Ensure backup directory exists
     if let Some(parent) = backup_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| MutxError::BackupFailed {
-                path: source.clone(),
-                source: e,
-            })?;
+        fs::create_dir_all(parent).map_err(|e| MutxError::BackupFailed {
+            path: source.clone(),
+            source: e,
+        })?;
     }
 
-    debug!("Creating atomic backup: {} -> {}", source.display(), backup_path.display());
+    debug!(
+        "Creating atomic backup: {} -> {}",
+        source.display(),
+        backup_path.display()
+    );
 
     // Atomic backup using copy-to-temp + rename strategy
     let temp_backup = backup_path.with_extension("tmp");
 
     // Copy to temporary file
-    fs::copy(source, &temp_backup)
-        .map_err(|e| MutxError::BackupFailed {
-            path: source.clone(),
-            source: e,
-        })?;
+    fs::copy(source, &temp_backup).map_err(|e| MutxError::BackupFailed {
+        path: source.clone(),
+        source: e,
+    })?;
 
     // Atomically rename temp to final backup name
-    fs::rename(&temp_backup, &backup_path)
-        .map_err(|e| {
-            // Cleanup temp file on failure
-            let _ = fs::remove_file(&temp_backup);
-            MutxError::BackupFailed {
-                path: source.clone(),
-                source: e,
-            }
-        })?;
+    fs::rename(&temp_backup, &backup_path).map_err(|e| {
+        // Cleanup temp file on failure
+        let _ = fs::remove_file(&temp_backup);
+        MutxError::BackupFailed {
+            path: source.clone(),
+            source: e,
+        }
+    })?;
 
     debug!("Backup created: {}", backup_path.display());
     Ok(backup_path)
 }
 
 fn generate_backup_path(config: &BackupConfig) -> Result<PathBuf> {
-    let filename = config.source
+    let filename = config
+        .source
         .file_name()
         .ok_or_else(|| MutxError::Other("Invalid source filename".to_string()))?
         .to_string_lossy();
@@ -80,7 +82,8 @@ fn generate_backup_path(config: &BackupConfig) -> Result<PathBuf> {
     let backup_path = if let Some(dir) = &config.directory {
         dir.join(backup_name)
     } else {
-        config.source
+        config
+            .source
             .parent()
             .ok_or_else(|| MutxError::Other("Source file has no parent directory".to_string()))?
             .join(backup_name)

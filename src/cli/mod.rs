@@ -2,8 +2,8 @@ mod args;
 mod housekeep_command;
 mod write_command;
 
-use mutx::Result;
 pub use args::{Args, Command};
+use mutx::Result;
 
 pub fn run(args: Args) -> Result<()> {
     match args.command {

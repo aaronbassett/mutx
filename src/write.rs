@@ -37,20 +37,20 @@ impl AtomicWriter {
                 // Initialize temp file on first write
                 if self.temp_file.is_none() {
                     self.temp_file = Some(
-                        atomic_write_file::AtomicWriteFile::open(&self.target)
-                            .map_err(|e| MutxError::WriteFailed {
+                        atomic_write_file::AtomicWriteFile::open(&self.target).map_err(|e| {
+                            MutxError::WriteFailed {
                                 path: self.target.clone(),
                                 source: e,
-                            })?
+                            }
+                        })?,
                     );
                 }
 
                 if let Some(temp) = self.temp_file.as_mut() {
-                    temp.write_all(buf)
-                        .map_err(|e| MutxError::WriteFailed {
-                            path: self.target.clone(),
-                            source: e,
-                        })?;
+                    temp.write_all(buf).map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
+                    })?;
                 }
                 Ok(())
             }
@@ -61,10 +61,12 @@ impl AtomicWriter {
     pub fn commit(mut self) -> Result<()> {
         match self.mode {
             WriteMode::Simple => {
-                let mut temp = atomic_write_file::AtomicWriteFile::open(&self.target)
-                    .map_err(|e| MutxError::WriteFailed {
-                        path: self.target.clone(),
-                        source: e,
+                let mut temp =
+                    atomic_write_file::AtomicWriteFile::open(&self.target).map_err(|e| {
+                        MutxError::WriteFailed {
+                            path: self.target.clone(),
+                            source: e,
+                        }
                     })?;
 
                 temp.write_all(&self.buffer)
@@ -73,31 +75,30 @@ impl AtomicWriter {
                         source: e,
                     })?;
 
-                temp.commit()
-                    .map_err(|e| MutxError::WriteFailed {
-                        path: self.target.clone(),
-                        source: e,
-                    })?;
+                temp.commit().map_err(|e| MutxError::WriteFailed {
+                    path: self.target.clone(),
+                    source: e,
+                })?;
             }
             WriteMode::Streaming => {
                 if let Some(temp) = self.temp_file.take() {
-                    temp.commit()
-                        .map_err(|e| MutxError::WriteFailed {
-                            path: self.target.clone(),
-                            source: e,
-                        })?;
+                    temp.commit().map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
+                    })?;
                 } else {
                     // No writes happened, create empty file
-                    let temp = atomic_write_file::AtomicWriteFile::open(&self.target)
-                        .map_err(|e| MutxError::WriteFailed {
-                            path: self.target.clone(),
-                            source: e,
+                    let temp =
+                        atomic_write_file::AtomicWriteFile::open(&self.target).map_err(|e| {
+                            MutxError::WriteFailed {
+                                path: self.target.clone(),
+                                source: e,
+                            }
                         })?;
-                    temp.commit()
-                        .map_err(|e| MutxError::WriteFailed {
-                            path: self.target.clone(),
-                            source: e,
-                        })?;
+                    temp.commit().map_err(|e| MutxError::WriteFailed {
+                        path: self.target.clone(),
+                        source: e,
+                    })?;
                 }
             }
         }

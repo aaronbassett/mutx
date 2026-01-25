@@ -14,7 +14,7 @@ fn test_full_workflow_with_backup_and_lock() {
     fs::write(&target, r#"{"version": 1}"#).unwrap();
 
     // Update with backup
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--backup")
         .arg("--backup-timestamp")
         .arg("-v")
@@ -49,9 +49,8 @@ fn test_concurrent_writers_with_locking() {
             thread::spawn(move || {
                 thread::sleep(Duration::from_millis(i * 100));
 
-                let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
-                cmd.arg("--wait")
-                    .arg(&target)
+                let mut cmd = Command::cargo_bin("mutx").unwrap();
+                cmd.arg(&target)
                     .write_stdin(format!("writer-{}", i))
                     .assert()
                     .success();
@@ -76,7 +75,7 @@ fn test_streaming_large_file() {
     // Generate 1MB of data
     let data = "x".repeat(1024 * 1024);
 
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--stream")
         .arg(&output)
         .write_stdin(data.clone())
@@ -96,7 +95,7 @@ fn test_housekeep_full_workflow() {
     fs::write(dir.path().join("file2.lock"), "").unwrap();
 
     // Dry run first
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
         .arg("--all")
         .arg("--dry-run")
@@ -109,7 +108,7 @@ fn test_housekeep_full_workflow() {
     assert!(dir.path().join("file2.lock").exists());
 
     // Real cleanup
-    let mut cmd = assert_cmd::cargo::cargo_bin!("mutx");
+    let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
         .arg("--all")
         .arg(dir.path())

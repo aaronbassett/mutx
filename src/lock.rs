@@ -23,7 +23,11 @@ pub struct FileLock {
 impl FileLock {
     /// Acquire an exclusive lock on the specified file
     pub fn acquire(lock_path: &Path, strategy: LockStrategy) -> Result<Self> {
-        debug!("Acquiring lock: {} (strategy: {:?})", lock_path.display(), strategy);
+        debug!(
+            "Acquiring lock: {} (strategy: {:?})",
+            lock_path.display(),
+            strategy
+        );
 
         // Create lock file
         let file = OpenOptions::new()
@@ -46,16 +50,13 @@ impl FileLock {
                     })?;
             }
             LockStrategy::NoWait => {
-                file.try_lock_exclusive()
-                    .map_err(|e| match e.kind() {
-                        io::ErrorKind::WouldBlock => {
-                            MutxError::LockWouldBlock(lock_path.to_path_buf())
-                        }
-                        _ => MutxError::LockAcquisitionFailed {
-                            path: lock_path.to_path_buf(),
-                            source: e,
-                        },
-                    })?;
+                file.try_lock_exclusive().map_err(|e| match e.kind() {
+                    io::ErrorKind::WouldBlock => MutxError::LockWouldBlock(lock_path.to_path_buf()),
+                    _ => MutxError::LockAcquisitionFailed {
+                        path: lock_path.to_path_buf(),
+                        source: e,
+                    },
+                })?;
             }
             LockStrategy::Timeout(duration) => {
                 let start = Instant::now();

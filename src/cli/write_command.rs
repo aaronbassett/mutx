@@ -1,11 +1,14 @@
 use crate::cli::Args;
-use mutx::{create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, WriteMode, MutxError, Result};
+use mutx::{
+    create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result, WriteMode,
+};
 use std::fs::File;
 use std::io::{self, Read};
 use std::time::Duration;
 
 pub fn execute_write(args: Args) -> Result<()> {
-    let output = args.output
+    let output = args
+        .output
         .ok_or_else(|| MutxError::Other("Output file required".to_string()))?;
 
     // Determine lock strategy
@@ -58,13 +61,10 @@ pub fn execute_write(args: Args) -> Result<()> {
 
     // Read input
     let mut input: Box<dyn Read> = if let Some(input_file) = args.input {
-        Box::new(
-            File::open(&input_file)
-                .map_err(|e| MutxError::ReadFailed {
-                    path: input_file,
-                    source: e,
-                })?
-        )
+        Box::new(File::open(&input_file).map_err(|e| MutxError::ReadFailed {
+            path: input_file,
+            source: e,
+        })?)
     } else {
         Box::new(io::stdin())
     };
