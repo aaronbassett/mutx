@@ -81,4 +81,3 @@ impl MutxError {
 pub type Result<T> = std::result::Result<T, MutxError>;
 
 // Maintain backward compatibility
-pub use MutxError as ErrorKind;

@@ -1,7 +1,7 @@
 use crate::error::{MutxError, Result};
 use chrono::Local;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tracing::debug;
 
 #[derive(Debug, Clone)]

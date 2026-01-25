@@ -13,14 +13,14 @@ pub fn parse_duration(s: &str) -> Result<Duration> {
         });
     }
 
-    let (num_str, unit) = if s.ends_with('s') {
-        (&s[..s.len() - 1], 's')
-    } else if s.ends_with('m') {
-        (&s[..s.len() - 1], 'm')
-    } else if s.ends_with('h') {
-        (&s[..s.len() - 1], 'h')
-    } else if s.ends_with('d') {
-        (&s[..s.len() - 1], 'd')
+    let (num_str, unit) = if let Some(stripped) = s.strip_suffix('s') {
+        (stripped, 's')
+    } else if let Some(stripped) = s.strip_suffix('m') {
+        (stripped, 'm')
+    } else if let Some(stripped) = s.strip_suffix('h') {
+        (stripped, 'h')
+    } else if let Some(stripped) = s.strip_suffix('d') {
+        (stripped, 'd')
     } else {
         // No unit, assume seconds
         (s, 's')
@@ -28,7 +28,8 @@ pub fn parse_duration(s: &str) -> Result<Duration> {
 
     let value: u64 = num_str.parse().map_err(|_| MutxError::InvalidDuration {
         input: s.to_string(),
-        message: format!("expected format: NUMBER[s|m|h|d] (e.g., '30s', '5m', '2h', '7d')"),
+        message: "expected format: NUMBER[s|m|h|d] (e.g., '30s', '5m', '2h', '7d')"
+            .to_string(),
     })?;
 
     let seconds = match unit {

@@ -1,7 +1,6 @@
 use clap::Parser;
 use mutx::MutxError;
 use std::process;
-use tracing_subscriber;
 
 mod cli;
 
