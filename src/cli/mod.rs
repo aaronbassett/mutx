@@ -1,14 +1,15 @@
-use anyhow::Result;
+mod args;
 
-pub struct Args;
+pub use args::{Args, Command};
+use anyhow::{bail, Result};
 
-impl Args {
-    pub fn parse() -> Self {
-        Args
+pub fn run(args: Args) -> Result<()> {
+    // Validate that OUTPUT is provided when no subcommand is given
+    if args.command.is_none() && args.output.is_none() {
+        bail!("error: the following required arguments were not provided:\n  <OUTPUT>\n\nUsage: mutx [OPTIONS] <OUTPUT>\n\nFor more information, try '--help'.");
     }
-}
 
-pub fn run(_args: Args) -> Result<()> {
-    println!("Stub CLI - to be implemented");
+    // TODO: Implement
+    println!("Args: {:?}", args);
     Ok(())
 }
