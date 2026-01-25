@@ -15,7 +15,7 @@ fn test_requires_output_file() {
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("required arguments"));
+        .stderr(predicate::str::contains("Output file required"));
 }
 
 #[test]

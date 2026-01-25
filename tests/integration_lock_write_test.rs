@@ -23,8 +23,8 @@ fn test_lock_and_write_integration() {
 
 #[test]
 fn test_concurrent_write_blocks() {
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
 
@@ -57,5 +57,8 @@ fn test_concurrent_write_blocks() {
     t1.join().unwrap();
     t2.join().unwrap();
 
-    assert!(blocked.load(Ordering::SeqCst), "Second lock should have been blocked");
+    assert!(
+        blocked.load(Ordering::SeqCst),
+        "Second lock should have been blocked"
+    );
 }

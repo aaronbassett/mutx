@@ -1,6 +1,6 @@
 use mutx::lock::{FileLock, LockStrategy};
-use tempfile::NamedTempFile;
 use std::time::Duration;
+use tempfile::NamedTempFile;
 
 #[test]
 fn test_lock_acquire_and_release() {
@@ -24,8 +24,11 @@ fn test_lock_no_wait_fails_when_locked() {
     let result = FileLock::acquire(&lock_path, LockStrategy::NoWait);
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
-    assert!(err_msg.contains("Failed to acquire lock") || err_msg.contains("locked"),
-            "Expected error about lock failure, got: {}", err_msg);
+    assert!(
+        err_msg.contains("Failed to acquire lock") || err_msg.contains("locked"),
+        "Expected error about lock failure, got: {}",
+        err_msg
+    );
 }
 
 #[test]
@@ -36,10 +39,7 @@ fn test_lock_timeout() {
     let _lock1 = FileLock::acquire(&lock_path, LockStrategy::Wait).unwrap();
 
     let start = std::time::Instant::now();
-    let result = FileLock::acquire(
-        &lock_path,
-        LockStrategy::Timeout(Duration::from_secs(1))
-    );
+    let result = FileLock::acquire(&lock_path, LockStrategy::Timeout(Duration::from_secs(1)));
     let elapsed = start.elapsed();
 
     assert!(result.is_err());

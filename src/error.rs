@@ -33,7 +33,10 @@ impl AppError {
 
         let kind = if msg.contains("lock") && msg.contains("timeout") {
             ErrorKind::Timeout
-        } else if msg.contains("failed to acquire lock") || msg.contains("locked") || msg.contains("would block") {
+        } else if msg.contains("failed to acquire lock")
+            || msg.contains("locked")
+            || msg.contains("would block")
+        {
             ErrorKind::LockFailed
         } else if msg.contains("permission denied") {
             ErrorKind::PermissionDenied

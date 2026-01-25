@@ -17,7 +17,8 @@ pub fn create_backup(target: &Path, config: &BackupConfig) -> Result<PathBuf> {
     }
 
     // Generate backup filename
-    let filename = target.file_name()
+    let filename = target
+        .file_name()
         .context("Invalid target filename")?
         .to_str()
         .context("Filename is not valid UTF-8")?;

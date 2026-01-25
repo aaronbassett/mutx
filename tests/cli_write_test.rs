@@ -26,7 +26,8 @@ fn test_write_from_file() {
     fs::write(&input, "file content").unwrap();
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
-    cmd.arg("--input").arg(input.to_str().unwrap())
+    cmd.arg("--input")
+        .arg(input.to_str().unwrap())
         .arg(output.to_str().unwrap())
         .assert()
         .success();
@@ -96,10 +97,7 @@ fn test_lock_no_wait_fails_when_locked() {
 
     let output_clone = output.clone();
     let handle = thread::spawn(move || {
-        let _lock = mutx::FileLock::acquire(
-            &lock_path,
-            mutx::LockStrategy::Wait
-        ).unwrap();
+        let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
         thread::sleep(Duration::from_secs(2));
     });
 

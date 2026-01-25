@@ -1,8 +1,8 @@
 use mutx::housekeep::{clean_locks, CleanLockConfig};
 use std::fs::{self, File};
 use std::path::PathBuf;
-use tempfile::TempDir;
 use std::time::{Duration, SystemTime};
+use tempfile::TempDir;
 
 #[test]
 fn test_clean_orphaned_locks() {
@@ -31,10 +31,7 @@ fn test_skip_active_locks() {
     let dir = TempDir::new().unwrap();
 
     let lock_path = dir.path().join("active.lock");
-    let _active_lock = mutx::FileLock::acquire(
-        &lock_path,
-        mutx::LockStrategy::Wait
-    ).unwrap();
+    let _active_lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
 
     let config = CleanLockConfig {
         dir: dir.path().to_path_buf(),
@@ -76,7 +73,11 @@ fn test_older_than_filter() {
     let old_lock = dir.path().join("old.lock");
     File::create(&old_lock).unwrap();
     let two_hours_ago = SystemTime::now() - Duration::from_secs(2 * 3600);
-    filetime::set_file_mtime(&old_lock, filetime::FileTime::from_system_time(two_hours_ago)).unwrap();
+    filetime::set_file_mtime(
+        &old_lock,
+        filetime::FileTime::from_system_time(two_hours_ago),
+    )
+    .unwrap();
 
     // Recent lock (30 minutes ago)
     let recent_lock = dir.path().join("recent.lock");

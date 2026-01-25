@@ -1,4 +1,4 @@
-use mutx::backup::{BackupConfig, create_backup};
+use mutx::backup::{create_backup, BackupConfig};
 use std::fs;
 use tempfile::TempDir;
 
@@ -18,7 +18,10 @@ fn test_simple_backup_creation() {
 
     let backup_path = target.with_extension("txt.backup");
     assert!(backup_path.exists());
-    assert_eq!(fs::read_to_string(&backup_path).unwrap(), "original content");
+    assert_eq!(
+        fs::read_to_string(&backup_path).unwrap(),
+        "original content"
+    );
 }
 
 #[test]
@@ -36,8 +39,18 @@ fn test_backup_with_timestamp() {
     let backup_path = create_backup(&target, &config).unwrap();
 
     assert!(backup_path.exists());
-    assert!(backup_path.file_name().unwrap().to_str().unwrap().contains("test.txt."));
-    assert!(backup_path.file_name().unwrap().to_str().unwrap().contains(".backup"));
+    assert!(backup_path
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .contains("test.txt."));
+    assert!(backup_path
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .contains(".backup"));
     assert_eq!(fs::read_to_string(&backup_path).unwrap(), "original");
 }
 

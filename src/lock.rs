@@ -1,9 +1,9 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
+use fs2::FileExt;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use fs2::FileExt;
 
 #[derive(Debug, Clone)]
 pub enum LockStrategy {
@@ -14,6 +14,7 @@ pub enum LockStrategy {
 
 #[derive(Debug)]
 pub struct FileLock {
+    #[allow(dead_code)]
     file: File,
     path: PathBuf,
 }
@@ -25,6 +26,7 @@ impl FileLock {
         let file = OpenOptions::new()
             .create(true)
             .write(true)
+            .truncate(true)
             .open(lock_path)
             .with_context(|| format!("Failed to create lock file: {}", lock_path.display()))?;
 
@@ -40,7 +42,7 @@ impl FileLock {
                         io::ErrorKind::WouldBlock => {
                             anyhow::anyhow!("File locked by another process")
                         }
-                        _ => anyhow::Error::new(e)
+                        _ => anyhow::Error::new(e),
                     })
                     .with_context(|| format!("Failed to acquire lock: {}", lock_path.display()))?;
             }
@@ -51,10 +53,7 @@ impl FileLock {
                         Ok(_) => break,
                         Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
                             if start.elapsed() >= duration {
-                                bail!(
-                                    "Lock acquisition timeout after {}s",
-                                    duration.as_secs()
-                                );
+                                bail!("Lock acquisition timeout after {}s", duration.as_secs());
                             }
                             std::thread::sleep(Duration::from_millis(100));
                         }

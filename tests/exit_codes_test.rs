@@ -7,10 +7,7 @@ fn test_exit_code_0_on_success() {
     let output = dir.path().join("test.txt");
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
-    cmd.arg(output)
-        .write_stdin("data")
-        .assert()
-        .code(0);
+    cmd.arg(output).write_stdin("data").assert().code(0);
 }
 
 #[test]
@@ -29,10 +26,7 @@ fn test_exit_code_2_on_lock_timeout() {
     let output = dir.path().join("test.txt");
     let lock_path = output.with_extension("lock");
 
-    let _lock = mutx::FileLock::acquire(
-        &lock_path,
-        mutx::LockStrategy::Wait
-    ).unwrap();
+    let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--timeout")
@@ -49,10 +43,7 @@ fn test_exit_code_2_on_no_wait() {
     let output = dir.path().join("test.txt");
     let lock_path = output.with_extension("lock");
 
-    let _lock = mutx::FileLock::acquire(
-        &lock_path,
-        mutx::LockStrategy::Wait
-    ).unwrap();
+    let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("--no-wait")

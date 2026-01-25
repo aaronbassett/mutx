@@ -45,7 +45,12 @@ pub struct Args {
     pub backup: bool,
 
     /// Backup filename suffix
-    #[arg(long, value_name = "SUFFIX", default_value = ".backup", requires = "backup")]
+    #[arg(
+        long,
+        value_name = "SUFFIX",
+        default_value = ".backup",
+        requires = "backup"
+    )]
     pub backup_suffix: String,
 
     /// Store backups in directory

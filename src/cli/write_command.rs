@@ -1,8 +1,8 @@
 use crate::cli::Args;
-use mutx::{AtomicWriter, BackupConfig, FileLock, LockStrategy, WriteMode, create_backup};
 use anyhow::{Context, Result};
+use mutx::{create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, WriteMode};
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::time::Duration;
 
 pub fn execute_write(args: Args) -> Result<()> {
@@ -25,8 +25,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     });
 
     // Acquire lock
-    let _lock = FileLock::acquire(&lock_path, lock_strategy)
-        .context("Failed to acquire lock")?;
+    let _lock = FileLock::acquire(&lock_path, lock_strategy).context("Failed to acquire lock")?;
 
     if args.verbose > 0 {
         eprintln!("Lock acquired: {}", lock_path.display());
@@ -58,8 +57,10 @@ pub fn execute_write(args: Args) -> Result<()> {
 
     // Read input
     let mut input: Box<dyn Read> = if let Some(input_file) = args.input {
-        Box::new(File::open(&input_file)
-            .with_context(|| format!("Failed to open input file: {}", input_file.display()))?)
+        Box::new(
+            File::open(&input_file)
+                .with_context(|| format!("Failed to open input file: {}", input_file.display()))?,
+        )
     } else {
         Box::new(io::stdin())
     };

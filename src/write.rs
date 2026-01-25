@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
-use std::fs::{self, File};
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy)]
@@ -38,14 +37,16 @@ impl AtomicWriter {
                 // Initialize temp file on first write
                 if self.temp_file.is_none() {
                     self.temp_file = Some(
-                        atomic_write_file::AtomicWriteFile::open(&self.target)
-                            .with_context(|| {
-                                format!("Failed to create temp file for: {}", self.target.display())
-                            })?
+                        atomic_write_file::AtomicWriteFile::open(&self.target).with_context(
+                            || format!("Failed to create temp file for: {}", self.target.display()),
+                        )?,
                     );
                 }
 
-                self.temp_file.as_mut().unwrap().write_all(buf)
+                self.temp_file
+                    .as_mut()
+                    .unwrap()
+                    .write_all(buf)
                     .with_context(|| "Failed to write to temp file")?;
                 Ok(())
             }
@@ -64,27 +65,24 @@ impl AtomicWriter {
                 temp.write_all(&self.buffer)
                     .with_context(|| "Failed to write to temp file")?;
 
-                temp.commit()
-                    .with_context(|| {
-                        format!("Failed to commit write to: {}", self.target.display())
-                    })?;
+                temp.commit().with_context(|| {
+                    format!("Failed to commit write to: {}", self.target.display())
+                })?;
             }
             WriteMode::Streaming => {
                 if let Some(temp) = self.temp_file.take() {
-                    temp.commit()
-                        .with_context(|| {
-                            format!("Failed to commit write to: {}", self.target.display())
-                        })?;
+                    temp.commit().with_context(|| {
+                        format!("Failed to commit write to: {}", self.target.display())
+                    })?;
                 } else {
                     // No writes happened, create empty file
                     let temp = atomic_write_file::AtomicWriteFile::open(&self.target)
                         .with_context(|| {
                             format!("Failed to create temp file for: {}", self.target.display())
                         })?;
-                    temp.commit()
-                        .with_context(|| {
-                            format!("Failed to commit write to: {}", self.target.display())
-                        })?;
+                    temp.commit().with_context(|| {
+                        format!("Failed to commit write to: {}", self.target.display())
+                    })?;
                 }
             }
         }

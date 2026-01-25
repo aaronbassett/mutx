@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
+use fs2::FileExt;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
-use fs2::FileExt;
 
 #[derive(Debug, Clone)]
 pub struct CleanLockConfig {
@@ -52,7 +52,10 @@ pub fn clean_backups(config: &CleanBackupConfig) -> Result<Vec<PathBuf>> {
         if is_backup_file(path) {
             let base = extract_base_filename(path);
             let mtime = fs::metadata(path)?.modified()?;
-            backups.entry(base).or_insert_with(Vec::new).push((path.to_path_buf(), mtime));
+            backups
+                .entry(base)
+                .or_default()
+                .push((path.to_path_buf(), mtime));
         }
         Ok(())
     })?;
@@ -102,8 +105,8 @@ fn visit_directory<F>(dir: &Path, recursive: bool, visitor: &mut F) -> Result<()
 where
     F: FnMut(&Path) -> Result<()>,
 {
-    for entry in fs::read_dir(dir)
-        .with_context(|| format!("Failed to read directory: {}", dir.display()))?
+    for entry in
+        fs::read_dir(dir).with_context(|| format!("Failed to read directory: {}", dir.display()))?
     {
         let entry = entry?;
         let path = entry.path();
@@ -160,8 +163,7 @@ fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {
     let file = File::open(lock_path)?;
     match file.try_lock_exclusive() {
         Ok(_) => {
-            // Successfully locked = orphaned
-            let _ = file.unlock();
+            // Successfully locked = orphaned (lock released when file is dropped)
             Ok(true)
         }
         Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {

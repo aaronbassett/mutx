@@ -46,7 +46,11 @@ fn test_housekeep_clean_backups() {
 
     // Create backup files
     fs::write(dir.path().join("file.txt.backup"), "backup1").unwrap();
-    fs::write(dir.path().join("file.txt.20260125-120000.backup"), "backup2").unwrap();
+    fs::write(
+        dir.path().join("file.txt.20260125-120000.backup"),
+        "backup2",
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
