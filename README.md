@@ -12,17 +12,30 @@ A command-line tool for atomic file writes with process coordination through fil
 
 ## Installation
 
-### From source
+### Via Homebrew (macOS and Linux)
 
 ```bash
-cargo install --path .
+brew install aaronbassett/tap/mutx
 ```
 
-### From crates.io
+### Via Cargo
 
 ```bash
 cargo install mutx
 ```
+
+### From Source
+
+```bash
+git clone https://github.com/aaronbassett/mutx
+cd mutx
+cargo build --release
+# Binary will be in target/release/mutx
+```
+
+### Pre-built Binaries
+
+Download pre-built binaries for your platform from the [releases page](https://github.com/aaronbassett/mutx/releases)
 
 ## Quick Start
 
@@ -54,9 +67,8 @@ mutx [OPTIONS] <OUTPUT>
 **Options:**
 - `-i, --input <FILE>`: Read from file instead of stdin
 - `--stream`: Use streaming mode for large files
-- `--wait`: Wait for lock (default)
-- `--no-wait`: Fail immediately if locked
-- `-t, --timeout <SECONDS>`: Lock acquisition timeout
+- `--no-wait`: Fail immediately if locked (default: wait)
+- `-t, --timeout <SECONDS>`: Lock acquisition timeout (implies wait)
 - `-b, --backup`: Create backup before overwrite
 - `--backup-suffix <SUFFIX>`: Custom backup suffix (default: .backup)
 - `--backup-timestamp`: Add timestamp to backup
@@ -92,9 +104,9 @@ jq '.setting = "new"' app.json | mutx --backup app.json
 ### Concurrent Cron Jobs
 
 ```bash
-# Multiple cron jobs writing to same file
-* * * * * process_logs.sh | mutx --wait /var/log/summary.log
-* * * * * analyze_metrics.sh | mutx --wait /var/log/summary.log
+# Multiple cron jobs writing to same file (automatically waits for lock)
+* * * * * process_logs.sh | mutx /var/log/summary.log
+* * * * * analyze_metrics.sh | mutx /var/log/summary.log
 ```
 
 ### Large File Processing
