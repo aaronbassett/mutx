@@ -25,7 +25,6 @@ pub fn execute_write(
     follow_lock_symlinks: bool,
     verbose: u8,
 ) -> Result<()> {
-
     // Determine symlink policy
     let follow_symlinks_effective = follow_lock_symlinks || follow_symlinks;
     let follow_lock_symlinks_effective = follow_lock_symlinks;

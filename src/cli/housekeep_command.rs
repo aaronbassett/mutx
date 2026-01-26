@@ -23,9 +23,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             // Smart default: use cache directory
             let target_dir = dir.unwrap_or_else(|| get_lock_cache_dir().unwrap());
 
-            let duration = older_than
-                .map(|s| parse_duration(&s))
-                .transpose()?;
+            let duration = older_than.map(|s| parse_duration(&s)).transpose()?;
 
             let config = CleanLockConfig {
                 dir: target_dir,
@@ -51,9 +49,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             // Smart default: use current directory
             let target_dir = dir.unwrap_or_else(|| PathBuf::from("."));
 
-            let duration = older_than
-                .map(|s| parse_duration(&s))
-                .transpose()?;
+            let duration = older_than.map(|s| parse_duration(&s)).transpose()?;
 
             let config = CleanBackupConfig {
                 dir: target_dir,
@@ -86,14 +82,12 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
                 (None, Some(ld), Some(bd)) => (ld, bd),
                 _ => {
                     return Err(MutxError::Other(
-                        "Specify either [DIR] or both --locks-dir and --backups-dir".to_string()
+                        "Specify either [DIR] or both --locks-dir and --backups-dir".to_string(),
                     ));
                 }
             };
 
-            let duration = older_than
-                .map(|s| parse_duration(&s))
-                .transpose()?;
+            let duration = older_than.map(|s| parse_duration(&s)).transpose()?;
 
             // Clean locks
             let lock_config = CleanLockConfig {

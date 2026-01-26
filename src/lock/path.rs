@@ -12,29 +12,25 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
     }
 
     // Get canonical absolute path
-    let canonical = output_path
-        .canonicalize()
-        .or_else(|_| {
-            // If file doesn't exist yet, canonicalize parent and append filename
-            let parent = output_path
-                .parent()
-                .ok_or_else(|| MutxError::Other("Output path has no parent".to_string()))?;
+    let canonical = output_path.canonicalize().or_else(|_| {
+        // If file doesn't exist yet, canonicalize parent and append filename
+        let parent = output_path
+            .parent()
+            .ok_or_else(|| MutxError::Other("Output path has no parent".to_string()))?;
 
-            // POLA: Error if parent doesn't exist - don't create it
-            if !parent.exists() {
-                return Err(MutxError::PathNotFound(parent.to_path_buf()));
-            }
+        // POLA: Error if parent doesn't exist - don't create it
+        if !parent.exists() {
+            return Err(MutxError::PathNotFound(parent.to_path_buf()));
+        }
 
-            let parent_canonical = parent
-                .canonicalize()
-                .map_err(|e| MutxError::Io(e))?;
+        let parent_canonical = parent.canonicalize().map_err(MutxError::Io)?;
 
-            let filename = output_path
-                .file_name()
-                .ok_or_else(|| MutxError::Other("Output path has no filename".to_string()))?;
+        let filename = output_path
+            .file_name()
+            .ok_or_else(|| MutxError::Other("Output path has no filename".to_string()))?;
 
-            Ok(parent_canonical.join(filename))
-        })?;
+        Ok(parent_canonical.join(filename))
+    })?;
 
     // Extract path components
     let components: Vec<_> = canonical.components().collect();
@@ -61,9 +57,9 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
         // Get up to 3 ancestors before parent (for human readability)
         let parent_idx = components.len() - 2;
         let start_idx = if parent_idx > 3 {
-            parent_idx - 3  // Last 3 ancestors before parent
+            parent_idx - 3 // Last 3 ancestors before parent
         } else {
-            1  // Start after root
+            1 // Start after root
         };
 
         for component in &components[start_idx..parent_idx] {
@@ -99,9 +95,8 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
 
 /// Get the platform-specific cache directory for lock files
 pub fn get_lock_cache_dir() -> Result<PathBuf> {
-    let proj_dirs = ProjectDirs::from("", "", "mutx").ok_or_else(|| {
-        MutxError::Other("Could not determine cache directory".to_string())
-    })?;
+    let proj_dirs = ProjectDirs::from("", "", "mutx")
+        .ok_or_else(|| MutxError::Other("Could not determine cache directory".to_string()))?;
 
     let cache_dir = proj_dirs.cache_dir().join("locks");
 

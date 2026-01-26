@@ -12,7 +12,10 @@ fn test_lock_acquire_and_release() {
 
     drop(lock);
     // Lock file now persists after release (changed behavior in v1.1.0)
-    assert!(lock_path.exists(), "Lock file should persist for proper mutual exclusion");
+    assert!(
+        lock_path.exists(),
+        "Lock file should persist for proper mutual exclusion"
+    );
 }
 
 #[test]
@@ -45,6 +48,6 @@ fn test_lock_timeout() {
     let elapsed = start.elapsed();
 
     assert!(result.is_err());
-    assert!(elapsed >= Duration::from_millis(900));  // Allow some variance
+    assert!(elapsed >= Duration::from_millis(900)); // Allow some variance
     assert!(elapsed < Duration::from_millis(1500));
 }

@@ -198,7 +198,7 @@ fn extract_base_filename(path: &Path, suffix: &str) -> String {
     if parts.len() == 2 {
         let timestamp = parts[0];
         if is_valid_timestamp(timestamp) {
-            return parts[1].to_string();  // Base filename without timestamp
+            return parts[1].to_string(); // Base filename without timestamp
         }
     }
 
@@ -211,16 +211,15 @@ fn is_valid_timestamp(s: &str) -> bool {
     if s.len() != 15 {
         return false;
     }
-    
+
     if s.chars().nth(8) != Some('_') {
         return false;
     }
-    
+
     let date_part = &s[..8];
     let time_part = &s[9..];
-    
-    date_part.chars().all(|c| c.is_ascii_digit())
-        && time_part.chars().all(|c| c.is_ascii_digit())
+
+    date_part.chars().all(|c| c.is_ascii_digit()) && time_part.chars().all(|c| c.is_ascii_digit())
 }
 
 fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {

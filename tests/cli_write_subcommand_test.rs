@@ -38,7 +38,8 @@ fn test_both_forms_produce_identical_results() {
 
     // Implicit form
     let output1 = dir.path().join("test1.txt");
-    Command::cargo_bin("mutx").unwrap()
+    Command::cargo_bin("mutx")
+        .unwrap()
         .arg(output1.to_str().unwrap())
         .write_stdin("content")
         .assert()
@@ -46,7 +47,8 @@ fn test_both_forms_produce_identical_results() {
 
     // Explicit form
     let output2 = dir.path().join("test2.txt");
-    Command::cargo_bin("mutx").unwrap()
+    Command::cargo_bin("mutx")
+        .unwrap()
         .arg("write")
         .arg(output2.to_str().unwrap())
         .write_stdin("content")

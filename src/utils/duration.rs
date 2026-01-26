@@ -28,8 +28,7 @@ pub fn parse_duration(s: &str) -> Result<Duration> {
 
     let value: u64 = num_str.parse().map_err(|_| MutxError::InvalidDuration {
         input: s.to_string(),
-        message: "expected format: NUMBER[s|m|h|d] (e.g., '30s', '5m', '2h', '7d')"
-            .to_string(),
+        message: "expected format: NUMBER[s|m|h|d] (e.g., '30s', '5m', '2h', '7d')".to_string(),
     })?;
 
     let seconds = match unit {

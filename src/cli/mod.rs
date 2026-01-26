@@ -48,9 +48,8 @@ pub fn run(args: Args) -> Result<()> {
             // Implicit: mutx output.txt
             // Use top-level args for backward compatibility
             write_command::execute_write(
-                args.output.ok_or_else(|| {
-                    MutxError::Other("OUTPUT argument required".to_string())
-                })?,
+                args.output
+                    .ok_or_else(|| MutxError::Other("OUTPUT argument required".to_string()))?,
                 args.input,
                 args.stream,
                 args.no_wait,

@@ -106,10 +106,18 @@ fn test_ignores_user_backup_files() {
     // Create files that look similar but aren't mutx backups
     fs::write(temp.path().join("file.backup"), b"user backup").unwrap();
     fs::write(temp.path().join("file.bak"), b"user bak").unwrap();
-    fs::write(temp.path().join("file.20260125.backup"), b"user dated backup").unwrap();
+    fs::write(
+        temp.path().join("file.20260125.backup"),
+        b"user dated backup",
+    )
+    .unwrap();
 
     // Create actual mutx backup
-    fs::write(temp.path().join("file.txt.20260125_143000.mutx.backup"), b"mutx backup").unwrap();
+    fs::write(
+        temp.path().join("file.txt.20260125_143000.mutx.backup"),
+        b"mutx backup",
+    )
+    .unwrap();
 
     let config = CleanBackupConfig {
         dir: temp.path().to_path_buf(),
@@ -138,11 +146,7 @@ fn test_cleans_custom_suffix_backups() {
 
     // Create backups with custom suffix
     fs::write(dir.path().join("file.txt.bak"), "backup1").unwrap();
-    fs::write(
-        dir.path().join("file.txt.20260126_120000.bak"),
-        "backup2",
-    )
-    .unwrap();
+    fs::write(dir.path().join("file.txt.20260126_120000.bak"), "backup2").unwrap();
 
     // Should not touch .mutx.backup files
     fs::write(dir.path().join("other.txt.mutx.backup"), "keep").unwrap();

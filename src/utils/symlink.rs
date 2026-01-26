@@ -4,7 +4,7 @@ use std::path::Path;
 /// Check if a path is a symlink and validate against policy
 pub fn check_symlink(path: &Path, follow_symlinks: bool) -> Result<()> {
     // If path doesn't exist, it's not a symlink
-    if !path.exists() && !path.symlink_metadata().is_ok() {
+    if !path.exists() && path.symlink_metadata().is_err() {
         return Ok(());
     }
 
@@ -25,7 +25,7 @@ pub fn check_symlink(path: &Path, follow_symlinks: bool) -> Result<()> {
 /// Check if a lock path is a symlink (stricter check)
 pub fn check_lock_symlink(path: &Path, follow_lock_symlinks: bool) -> Result<()> {
     // If path doesn't exist, it's not a symlink
-    if !path.exists() && !path.symlink_metadata().is_ok() {
+    if !path.exists() && path.symlink_metadata().is_err() {
         return Ok(());
     }
 

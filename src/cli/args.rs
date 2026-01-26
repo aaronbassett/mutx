@@ -29,7 +29,12 @@ pub struct Args {
     pub no_wait: bool,
 
     /// Wait timeout in milliseconds (implies wait mode)
-    #[arg(short = 't', long, value_name = "MILLISECONDS", conflicts_with = "no_wait")]
+    #[arg(
+        short = 't',
+        long,
+        value_name = "MILLISECONDS",
+        conflicts_with = "no_wait"
+    )]
     pub timeout: Option<u64>,
 
     /// Maximum polling interval in milliseconds (default: 1000)
@@ -178,7 +183,12 @@ pub enum Command {
         no_wait: bool,
 
         /// Wait timeout in milliseconds (implies wait mode)
-        #[arg(short = 't', long, value_name = "MILLISECONDS", conflicts_with = "no_wait")]
+        #[arg(
+            short = 't',
+            long,
+            value_name = "MILLISECONDS",
+            conflicts_with = "no_wait"
+        )]
         timeout: Option<u64>,
 
         /// Maximum polling interval in milliseconds (default: 1000)
