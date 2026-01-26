@@ -28,9 +28,13 @@ pub struct Args {
     #[arg(long)]
     pub no_wait: bool,
 
-    /// Wait timeout in seconds (implies wait mode)
-    #[arg(short = 't', long, value_name = "SECONDS", conflicts_with = "no_wait")]
+    /// Wait timeout in milliseconds (implies wait mode)
+    #[arg(short = 't', long, value_name = "MILLISECONDS", conflicts_with = "no_wait")]
     pub timeout: Option<u64>,
+
+    /// Maximum polling interval in milliseconds (default: 1000)
+    #[arg(long, value_name = "MILLISECONDS", requires = "timeout")]
+    pub max_poll_interval: Option<u64>,
 
     /// Custom lock file location
     #[arg(long, value_name = "PATH")]

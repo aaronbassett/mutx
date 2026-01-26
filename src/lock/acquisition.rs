@@ -1,5 +1,6 @@
 use crate::error::{MutxError, Result};
 use fs2::FileExt;
+use rand::Rng;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -7,10 +8,30 @@ use std::time::{Duration, Instant};
 use tracing::debug;
 
 #[derive(Debug, Clone)]
+pub struct TimeoutConfig {
+    pub duration: Duration,
+    pub max_poll_interval: Duration,
+}
+
+impl TimeoutConfig {
+    pub fn new(duration: Duration) -> Self {
+        Self {
+            duration,
+            max_poll_interval: Duration::from_millis(1000),
+        }
+    }
+
+    pub fn with_max_interval(mut self, max_interval: Duration) -> Self {
+        self.max_poll_interval = max_interval;
+        self
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum LockStrategy {
     Wait,
     NoWait,
-    Timeout(Duration),
+    Timeout(TimeoutConfig),
 }
 
 #[derive(Debug)]
@@ -58,19 +79,33 @@ impl FileLock {
                     },
                 })?;
             }
-            LockStrategy::Timeout(duration) => {
+            LockStrategy::Timeout(config) => {
                 let start = Instant::now();
+                let mut current_interval = Duration::from_millis(10);
+                let mut rng = rand::thread_rng();
+
                 loop {
                     match file.try_lock_exclusive() {
                         Ok(_) => break,
                         Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
-                            if start.elapsed() >= duration {
+                            if start.elapsed() >= config.duration {
                                 return Err(MutxError::LockTimeout {
                                     path: lock_path.to_path_buf(),
-                                    duration,
+                                    duration: config.duration,
                                 });
                             }
-                            std::thread::sleep(Duration::from_millis(100));
+
+                            // Calculate sleep time with backoff + jitter
+                            let base_interval = current_interval.min(config.max_poll_interval);
+                            let jitter = Duration::from_millis(rng.gen_range(0..100));
+                            let sleep_time = base_interval + jitter;
+
+                            std::thread::sleep(sleep_time);
+
+                            // Exponential backoff for next iteration (1.5x multiplier)
+                            current_interval = Duration::from_millis(
+                                (current_interval.as_millis() as f64 * 1.5) as u64,
+                            );
                         }
                         Err(e) => {
                             return Err(MutxError::LockAcquisitionFailed {

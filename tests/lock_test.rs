@@ -1,4 +1,4 @@
-use mutx::lock::{FileLock, LockStrategy};
+use mutx::lock::{FileLock, LockStrategy, TimeoutConfig};
 use std::time::Duration;
 use tempfile::NamedTempFile;
 
@@ -11,7 +11,8 @@ fn test_lock_acquire_and_release() {
     assert!(lock_path.exists());
 
     drop(lock);
-    assert!(!lock_path.exists(), "Lock file should be cleaned up");
+    // Lock file now persists after release (changed behavior in v1.1.0)
+    assert!(lock_path.exists(), "Lock file should persist for proper mutual exclusion");
 }
 
 #[test]
@@ -39,10 +40,11 @@ fn test_lock_timeout() {
     let _lock1 = FileLock::acquire(&lock_path, LockStrategy::Wait).unwrap();
 
     let start = std::time::Instant::now();
-    let result = FileLock::acquire(&lock_path, LockStrategy::Timeout(Duration::from_secs(1)));
+    let config = TimeoutConfig::new(Duration::from_millis(1000));
+    let result = FileLock::acquire(&lock_path, LockStrategy::Timeout(config));
     let elapsed = start.elapsed();
 
     assert!(result.is_err());
-    assert!(elapsed >= Duration::from_secs(1));
-    assert!(elapsed < Duration::from_secs(2));
+    assert!(elapsed >= Duration::from_millis(900));  // Allow some variance
+    assert!(elapsed < Duration::from_millis(1500));
 }

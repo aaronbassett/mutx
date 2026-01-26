@@ -1,6 +1,7 @@
 use crate::cli::Args;
 use mutx::{
-    create_backup, AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result, WriteMode,
+    create_backup, derive_lock_path, validate_lock_path, AtomicWriter, BackupConfig, FileLock,
+    LockStrategy, MutxError, Result, TimeoutConfig, WriteMode,
 };
 use std::fs::File;
 use std::io::{self, Read};
@@ -31,18 +32,27 @@ pub fn execute_write(args: Args) -> Result<()> {
     // Determine lock strategy
     let lock_strategy = if args.no_wait {
         LockStrategy::NoWait
-    } else if let Some(timeout) = args.timeout {
-        LockStrategy::Timeout(Duration::from_secs(timeout))
+    } else if let Some(timeout_ms) = args.timeout {
+        let mut config = TimeoutConfig::new(Duration::from_millis(timeout_ms));
+
+        if let Some(max_interval_ms) = args.max_poll_interval {
+            config = config.with_max_interval(Duration::from_millis(max_interval_ms));
+        }
+
+        LockStrategy::Timeout(config)
     } else {
         LockStrategy::Wait
     };
 
     // Determine lock file path
-    let lock_path = args.lock_file.unwrap_or_else(|| {
-        let mut path = output.clone();
-        path.set_extension("lock");
-        path
-    });
+    let lock_path = if let Some(custom_lock) = args.lock_file {
+        custom_lock
+    } else {
+        derive_lock_path(&output, false)?
+    };
+
+    // Validate lock path
+    validate_lock_path(&lock_path, &output)?;
 
     // Acquire lock
     let _lock = FileLock::acquire(&lock_path, lock_strategy)?;
