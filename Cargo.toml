@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "mutx-macros"]
+members = ["."]
 
 [package]
 name = "mutx"
@@ -18,7 +18,6 @@ name = "mutx"
 path = "src/main.rs"
 
 [dependencies]
-mutx-macros = { path = "mutx-macros" }
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
 atomic-write-file = "0.2"
 fs2 = "0.4"

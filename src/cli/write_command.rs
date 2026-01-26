@@ -1,7 +1,7 @@
 use mutx::{
-    check_lock_symlink, check_symlink, create_backup, derive_lock_path, validate_lock_path,
-    AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result, TimeoutConfig,
-    WriteMode,
+    check_lock_symlink, check_symlink, create_backup, derive_lock_path, validate_backup_suffix,
+    validate_lock_path, AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result,
+    TimeoutConfig, WriteMode,
 };
 use std::fs::File;
 use std::io::{self, Read};
@@ -50,6 +50,11 @@ pub fn execute_write(
         if backup_dir_ref.exists() && !backup_dir_ref.is_dir() {
             return Err(MutxError::NotADirectory(backup_dir_ref.clone()));
         }
+    }
+
+    // Validate backup suffix if backup is requested (fail fast before lock)
+    if backup {
+        validate_backup_suffix(&backup_suffix)?;
     }
 
     // Determine lock strategy
