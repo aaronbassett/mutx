@@ -45,7 +45,7 @@ pub struct Args {
     #[arg(long, value_name = "PATH")]
     pub lock_file: Option<PathBuf>,
 
-    /// Follow symbolic links for output files and housekeep operations
+    /// Follow symbolic links for output files
     #[arg(long)]
     pub follow_symlinks: bool,
 

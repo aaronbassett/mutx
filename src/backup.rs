@@ -12,8 +12,28 @@ pub struct BackupConfig {
     pub timestamp: bool,
 }
 
+/// Validate that a backup suffix is safe to use
+pub fn validate_backup_suffix(suffix: &str) -> Result<()> {
+    if suffix.is_empty() {
+        return Err(MutxError::Other(
+            "Backup suffix cannot be empty".to_string(),
+        ));
+    }
+
+    if suffix == "." {
+        return Err(MutxError::Other(
+            "Backup suffix cannot be a single dot".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
 /// Create a backup of the specified file using atomic operations
 pub fn create_backup(config: &BackupConfig) -> Result<PathBuf> {
+    // Validate suffix before creating backup
+    validate_backup_suffix(&config.suffix)?;
+
     let source = &config.source;
 
     // Verify source exists

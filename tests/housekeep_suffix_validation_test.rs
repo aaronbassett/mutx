@@ -32,7 +32,9 @@ fn test_single_dot_suffix_rejected() {
         .arg(dir.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("Backup suffix cannot be a single dot"));
+        .stderr(predicate::str::contains(
+            "Backup suffix cannot be a single dot",
+        ));
 }
 
 #[test]

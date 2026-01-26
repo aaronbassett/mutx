@@ -111,14 +111,13 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
 /// chmod 755 ~/.cache  # Restore
 /// ```
 pub fn get_lock_cache_dir() -> Result<PathBuf> {
-    let proj_dirs = ProjectDirs::from("", "", "mutx")
-        .ok_or_else(|| {
-            MutxError::Other(
-                "Failed to determine lock cache directory. \
+    let proj_dirs = ProjectDirs::from("", "", "mutx").ok_or_else(|| {
+        MutxError::Other(
+            "Failed to determine lock cache directory. \
                  Try specifying an explicit directory with the DIR argument."
-                    .to_string(),
-            )
-        })?;
+                .to_string(),
+        )
+    })?;
 
     let cache_dir = proj_dirs.cache_dir().join("locks");
 

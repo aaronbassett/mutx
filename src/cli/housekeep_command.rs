@@ -140,12 +140,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
     }
 }
 
-fn report_cleaning_results(
-    item_type: &str,
-    cleaned: &[PathBuf],
-    verbose: bool,
-    dry_run: bool,
-) {
+fn report_cleaning_results(item_type: &str, cleaned: &[PathBuf], verbose: bool, dry_run: bool) {
     let verb = if dry_run { "Would clean" } else { "Cleaned" };
 
     if cleaned.is_empty() {
