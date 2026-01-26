@@ -41,6 +41,21 @@ pub enum MutxError {
     #[error("Path is not a directory: {0}")]
     NotADirectory(PathBuf),
 
+    #[error("Path is a symbolic link: {path}\nUse --follow-symlinks to allow symlinks.\nThis is disabled by default for security.")]
+    SymlinkNotAllowed { path: PathBuf },
+
+    #[error("Lock file path is a symbolic link: {path}\nUse --follow-lock-symlinks to allow symlinks to lock files.\nWARNING: This may be a security risk.")]
+    LockSymlinkNotAllowed { path: PathBuf },
+
+    #[error("Lock file path cannot equal output file path.\nLock: {lock_path}\nOutput: {output_path}\nSpecify a different path with --lock-file.")]
+    LockPathCollision {
+        lock_path: PathBuf,
+        output_path: PathBuf,
+    },
+
+    #[error("Failed to create cache directory {path}: {source}")]
+    CacheDirectoryFailed { path: PathBuf, source: io::Error },
+
     #[error("Operation interrupted")]
     Interrupted,
 
