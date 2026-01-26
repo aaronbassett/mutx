@@ -2,7 +2,7 @@ mod args;
 mod housekeep_command;
 mod write_command;
 
-pub use args::{Args, Command};
+pub use args::{Args, Command, HousekeepOperation};
 use mutx::{MutxError, Result};
 
 pub fn run(args: Args) -> Result<()> {
@@ -41,27 +41,9 @@ pub fn run(args: Args) -> Result<()> {
                 verbose,
             )
         }
-        Some(Command::Housekeep {
-            dir,
-            clean_locks,
-            clean_backups,
-            all,
-            recursive,
-            older_than,
-            keep_newest,
-            dry_run,
-            verbose,
-        }) => housekeep_command::execute_housekeep(Command::Housekeep {
-            dir,
-            clean_locks,
-            clean_backups,
-            all,
-            recursive,
-            older_than,
-            keep_newest,
-            dry_run,
-            verbose,
-        }),
+        Some(Command::Housekeep { operation }) => {
+            housekeep_command::execute_housekeep(Command::Housekeep { operation })
+        }
         None => {
             // Implicit: mutx output.txt
             // Use top-level args for backward compatibility

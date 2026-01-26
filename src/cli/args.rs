@@ -76,6 +76,88 @@ pub struct Args {
 }
 
 #[derive(Subcommand, Debug)]
+pub enum HousekeepOperation {
+    /// Clean orphaned lock files from cache directory
+    Locks {
+        /// Directory to clean (default: platform lock cache directory)
+        #[arg(value_name = "DIR")]
+        dir: Option<PathBuf>,
+
+        #[arg(short = 'r', long)]
+        recursive: bool,
+
+        #[arg(long, value_name = "DURATION")]
+        older_than: Option<String>,
+
+        #[arg(short = 'n', long)]
+        dry_run: bool,
+
+        #[arg(short = 'v', long)]
+        verbose: bool,
+    },
+
+    /// Clean old backup files
+    Backups {
+        /// Directory to clean (default: current directory)
+        #[arg(value_name = "DIR")]
+        dir: Option<PathBuf>,
+
+        #[arg(short = 'r', long)]
+        recursive: bool,
+
+        #[arg(long, value_name = "DURATION")]
+        older_than: Option<String>,
+
+        #[arg(long, value_name = "N")]
+        keep_newest: Option<usize>,
+
+        /// Backup suffix to match (default: .mutx.backup)
+        #[arg(long, value_name = "SUFFIX", default_value = ".mutx.backup")]
+        suffix: String,
+
+        #[arg(short = 'n', long)]
+        dry_run: bool,
+
+        #[arg(short = 'v', long)]
+        verbose: bool,
+    },
+
+    /// Clean both locks and backups
+    All {
+        /// Directory to clean (used for both locks and backups)
+        #[arg(value_name = "DIR", conflicts_with_all = ["locks_dir", "backups_dir"])]
+        dir: Option<PathBuf>,
+
+        /// Directory for lock files (requires --backups-dir)
+        #[arg(long, value_name = "DIR", requires = "backups_dir")]
+        locks_dir: Option<PathBuf>,
+
+        /// Directory for backup files (requires --locks-dir)
+        #[arg(long, value_name = "DIR", requires = "locks_dir")]
+        backups_dir: Option<PathBuf>,
+
+        #[arg(short = 'r', long)]
+        recursive: bool,
+
+        #[arg(long, value_name = "DURATION")]
+        older_than: Option<String>,
+
+        #[arg(long, value_name = "N")]
+        keep_newest: Option<usize>,
+
+        /// Backup suffix to match (default: .mutx.backup)
+        #[arg(long, value_name = "SUFFIX", default_value = ".mutx.backup")]
+        suffix: String,
+
+        #[arg(short = 'n', long)]
+        dry_run: bool,
+
+        #[arg(short = 'v', long)]
+        verbose: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 pub enum Command {
     /// Write to a file atomically (default command)
     Write {
@@ -142,42 +224,9 @@ pub enum Command {
         verbose: u8,
     },
 
-    /// Housekeeping operations
+    /// Clean up lock files and backups
     Housekeep {
-        /// Directory to clean (default: current directory)
-        #[arg(value_name = "DIR")]
-        dir: Option<PathBuf>,
-
-        /// Clean orphaned lock files
-        #[arg(long)]
-        clean_locks: bool,
-
-        /// Clean old backup files
-        #[arg(long)]
-        clean_backups: bool,
-
-        /// Clean both locks and backups
-        #[arg(long)]
-        all: bool,
-
-        /// Scan subdirectories
-        #[arg(short = 'r', long)]
-        recursive: bool,
-
-        /// Age threshold (e.g., "2h", "7d", "30m")
-        #[arg(long, value_name = "DURATION")]
-        older_than: Option<String>,
-
-        /// Keep N newest backups per file (backups only)
-        #[arg(long, value_name = "N")]
-        keep_newest: Option<usize>,
-
-        /// Show what would be deleted without deleting
-        #[arg(short = 'n', long)]
-        dry_run: bool,
-
-        /// Verbose output
-        #[arg(short = 'v', long)]
-        verbose: bool,
+        #[command(subcommand)]
+        operation: HousekeepOperation,
     },
 }
