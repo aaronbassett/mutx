@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_housekeep_locks_subcommand() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("locks")
         .arg("--dry-run")
@@ -16,7 +16,7 @@ fn test_housekeep_locks_subcommand() {
 fn test_housekeep_backups_subcommand() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--dry-run")
@@ -29,7 +29,7 @@ fn test_housekeep_backups_subcommand() {
 fn test_housekeep_all_with_single_dir() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("all")
         .arg("--dry-run")
@@ -43,7 +43,7 @@ fn test_housekeep_all_with_separate_dirs() {
     let locks_dir = TempDir::new().unwrap();
     let backups_dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("all")
         .arg("--dry-run")
@@ -57,7 +57,7 @@ fn test_housekeep_all_with_separate_dirs() {
 
 #[test]
 fn test_housekeep_all_requires_dir_or_both_flags() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("all")
         .arg("--dry-run")
@@ -72,7 +72,7 @@ fn test_housekeep_backups_custom_suffix() {
     // Create a .bak file
     fs::write(dir.path().join("test.txt.bak"), "backup").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")

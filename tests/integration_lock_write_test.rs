@@ -1,6 +1,5 @@
 use mutx::{AtomicWriter, FileLock, LockStrategy, WriteMode};
 use std::fs;
-use std::io::Write;
 use tempfile::TempDir;
 
 #[test]

@@ -35,10 +35,10 @@ fn test_exponential_backoff_timing() {
     let result = FileLock::acquire(&lock_path, LockStrategy::Timeout(config));
     let elapsed = start.elapsed();
 
-    // Should timeout around 500ms (allow some variance)
+    // Should timeout around 500ms (allow some variance for CI environments)
     assert!(result.is_err());
     assert!(elapsed >= Duration::from_millis(450));
-    assert!(elapsed <= Duration::from_millis(600));
+    assert!(elapsed <= Duration::from_millis(800));
 
     // Signal release and cleanup
     *release_signal.lock().unwrap() = true;

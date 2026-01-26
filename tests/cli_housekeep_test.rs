@@ -11,7 +11,7 @@ fn test_housekeep_clean_locks() {
     let lock = dir.path().join("file.lock");
     File::create(&lock).unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("locks")
         .arg("--verbose")
@@ -29,7 +29,7 @@ fn test_housekeep_dry_run() {
     let lock = dir.path().join("file.lock");
     File::create(&lock).unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("locks")
         .arg("--dry-run")
@@ -54,7 +54,7 @@ fn test_housekeep_clean_backups() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--keep-newest")
@@ -75,7 +75,7 @@ fn test_housekeep_clean_backups() {
 
 #[test]
 fn test_housekeep_requires_subcommand() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .assert()
         .failure()

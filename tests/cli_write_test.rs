@@ -8,7 +8,7 @@ fn test_write_from_stdin() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("output.txt");
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg(output.to_str().unwrap())
         .write_stdin("hello world")
         .assert()
@@ -25,7 +25,7 @@ fn test_write_from_file() {
 
     fs::write(&input, "file content").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--input")
         .arg(input.to_str().unwrap())
         .arg(output.to_str().unwrap())
@@ -40,7 +40,7 @@ fn test_streaming_mode() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("output.txt");
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--stream")
         .arg(output.to_str().unwrap())
         .write_stdin("streamed content")
@@ -55,7 +55,7 @@ fn test_empty_input_creates_empty_file() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("empty.txt");
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg(output.to_str().unwrap())
         .write_stdin("")
         .assert()
@@ -72,7 +72,7 @@ fn test_backup_creation() {
 
     fs::write(&output, "original").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--backup")
         .arg(output.to_str().unwrap())
         .write_stdin("updated")
@@ -97,7 +97,7 @@ fn test_lock_no_wait_fails_when_locked() {
     // Use derive_lock_path to get the correct lock location (cache directory)
     let lock_path = mutx::derive_lock_path(&output, false).unwrap();
 
-    let output_clone = output.clone();
+    let _output_clone = output.clone();
     let handle = thread::spawn(move || {
         let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
         thread::sleep(Duration::from_secs(2));
@@ -105,7 +105,7 @@ fn test_lock_no_wait_fails_when_locked() {
 
     thread::sleep(Duration::from_millis(100));
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--no-wait")
         .arg(output.to_str().unwrap())
         .write_stdin("should fail")

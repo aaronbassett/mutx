@@ -3,7 +3,7 @@ use predicates::prelude::*;
 
 #[test]
 fn test_follow_symlinks_help_text_does_not_mention_housekeep() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     let output = cmd.arg("--help").output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -40,7 +40,7 @@ fn test_follow_symlinks_help_text_does_not_mention_housekeep() {
 
 #[test]
 fn test_follow_symlinks_help_text_is_accurate() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--help")
         .assert()
         .success()

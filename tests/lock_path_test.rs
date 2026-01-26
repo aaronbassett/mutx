@@ -1,5 +1,4 @@
 use mutx::lock::derive_lock_path;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 #[test]
@@ -81,7 +80,7 @@ fn test_lock_path_in_cache_directory() {
 #[test]
 fn test_custom_lock_path_accepted() {
     let temp = TempDir::new().unwrap();
-    let output = temp.path().join("test.txt");
+    let _output = temp.path().join("test.txt");
     let custom = temp.path().join("custom.lock");
 
     let lock_path = derive_lock_path(&custom, true).unwrap();

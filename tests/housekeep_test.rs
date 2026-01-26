@@ -1,6 +1,5 @@
 use mutx::housekeep::{clean_locks, CleanLockConfig};
 use std::fs::{self, File};
-use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 use tempfile::TempDir;
 

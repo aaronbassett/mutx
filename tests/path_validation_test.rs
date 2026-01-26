@@ -5,7 +5,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_output_must_be_provided() {
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.write_stdin("test");
 
     cmd.assert().failure().stderr(
@@ -19,7 +19,7 @@ fn test_input_file_must_exist() {
     let output = temp.path().join("output.txt");
     let input = temp.path().join("nonexistent.txt");
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--input").arg(&input).arg(&output);
 
     cmd.assert().failure().stderr(
@@ -36,7 +36,7 @@ fn test_backup_dir_must_be_directory() {
     let not_a_dir = temp.path().join("file.txt");
     fs::write(&not_a_dir, "").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("--backup")
         .arg("--backup-dir")
         .arg(&not_a_dir)

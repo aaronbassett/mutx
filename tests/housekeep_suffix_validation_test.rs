@@ -8,7 +8,7 @@ fn test_empty_suffix_rejected() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("file.txt.bak"), "backup").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")
@@ -24,7 +24,7 @@ fn test_single_dot_suffix_rejected() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("file.txt.bak"), "backup").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")
@@ -43,7 +43,7 @@ fn test_valid_suffixes_accepted() {
 
     // Test .bak suffix
     fs::write(dir.path().join("file1.txt.bak"), "backup1").unwrap();
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")
@@ -54,7 +54,7 @@ fn test_valid_suffixes_accepted() {
 
     // Test backup suffix
     fs::write(dir.path().join("file2.txt.backup"), "backup2").unwrap();
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")
@@ -65,7 +65,7 @@ fn test_valid_suffixes_accepted() {
 
     // Test .old.bak suffix
     fs::write(dir.path().join("file3.txt.old.bak"), "backup3").unwrap();
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--suffix")
@@ -79,7 +79,7 @@ fn test_valid_suffixes_accepted() {
 fn test_empty_suffix_rejected_in_all_command() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("all")
         .arg("--suffix")

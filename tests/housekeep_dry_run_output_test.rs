@@ -23,7 +23,7 @@ fn setup_test_dir_with_locks() -> TempDir {
 fn test_dry_run_shows_would_clean() {
     let temp_dir = setup_test_dir_with_backups();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--dry-run")
@@ -40,7 +40,7 @@ fn test_dry_run_shows_would_clean() {
 fn test_normal_run_shows_cleaned() {
     let temp_dir = setup_test_dir_with_backups();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("backups")
         .arg("--older-than")
@@ -56,7 +56,7 @@ fn test_normal_run_shows_cleaned() {
 fn test_dry_run_verbose_shows_would_clean() {
     let temp_dir = setup_test_dir_with_locks();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("locks")
         .arg("--dry-run")
@@ -80,7 +80,7 @@ fn test_all_command_dry_run_shows_would_clean() {
     let lock_file = temp_dir.path().join("file.txt.mutx.lock");
     fs::write(&lock_file, "lock content").unwrap();
 
-    let mut cmd = Command::cargo_bin("mutx").unwrap();
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_mutx"));
     cmd.arg("housekeep")
         .arg("all")
         .arg("--dry-run")
