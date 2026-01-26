@@ -5,6 +5,22 @@ use mutx::utils::parse_duration;
 use mutx::{MutxError, Result};
 use std::path::PathBuf;
 
+fn validate_suffix(suffix: &str) -> Result<()> {
+    if suffix.is_empty() {
+        return Err(MutxError::Other(
+            "Backup suffix cannot be empty".to_string(),
+        ));
+    }
+
+    if suffix == "." {
+        return Err(MutxError::Other(
+            "Backup suffix cannot be a single dot".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
 pub fn execute_housekeep(cmd: Command) -> Result<()> {
     let Command::Housekeep { operation } = cmd else {
         return Err(MutxError::Other(
@@ -46,6 +62,8 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             dry_run,
             verbose,
         } => {
+            validate_suffix(&suffix)?;
+
             // Smart default: use current directory
             let target_dir = dir.unwrap_or_else(|| PathBuf::from("."));
 
@@ -76,6 +94,8 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             dry_run,
             verbose,
         } => {
+            validate_suffix(&suffix)?;
+
             // Validation: require either dir OR both locks_dir and backups_dir
             let (locks_path, backups_path) = match (dir, locks_dir, backups_dir) {
                 (Some(d), None, None) => (d.clone(), d),
