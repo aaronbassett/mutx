@@ -74,9 +74,9 @@ fn generate_backup_path(config: &BackupConfig) -> Result<PathBuf> {
 
     let backup_name = if config.timestamp {
         let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-        format!("{}.{}.mutx.backup", filename, timestamp)
+        format!("{}.{}{}", filename, timestamp, config.suffix)
     } else {
-        format!("{}.mutx.backup", filename)
+        format!("{}{}", filename, config.suffix)
     };
 
     let backup_path = if let Some(dir) = &config.directory {
