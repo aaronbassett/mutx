@@ -10,6 +10,17 @@ A command-line tool for atomic file writes with process coordination through fil
 - **Streaming mode**: Process large files with constant memory usage
 - **Housekeeping**: Clean up orphaned locks and old backups
 
+## ⚠️ Pre-Release Software
+
+**Current version: 0.3.0 (pre-release)**
+
+This software is under active development. The API and CLI are subject to change
+before the v1.0.0 stable release. While the core functionality is production-ready
+and well-tested, breaking changes may occur in minor version updates.
+
+Version 1.0.0 will mark the first stable public release with guaranteed backward
+compatibility.
+
 ## Installation
 
 ### Via Homebrew (macOS and Linux)
@@ -40,11 +51,15 @@ Download pre-built binaries for your platform from the [releases page](https://g
 ## Quick Start
 
 ```bash
-# Basic usage
+# Basic usage (both forms work)
 echo "new content" | mutx config.json
+echo "new content" | mutx write config.json
 
 # With backup
 echo "new content" | mutx --backup config.json
+
+# Custom backup suffix
+echo "new content" | mutx --backup --backup-suffix .bak config.json
 
 # Large file streaming
 cat large_file.csv | mutx --stream output.csv
@@ -70,7 +85,7 @@ creates a new one.
 To clean up orphaned lock files:
 
 ```bash
-mutx housekeep --clean-locks
+mutx housekeep locks
 ```
 
 ### Custom Lock Locations
@@ -90,14 +105,14 @@ Note: Custom lock files are not automatically cleaned by housekeep.
 By default, mutx rejects symbolic links for security:
 
 ```bash
-# This will fail if output.txt is a symlink
-mutx write output.txt < input.txt
+# Reject symlinks (default)
+mutx output.txt < input.txt
 
 # Allow symlinks for output files
-mutx write output.txt --follow-symlinks < input.txt
+mutx output.txt --follow-symlinks < input.txt
 
 # Allow symlinks even for lock files (not recommended)
-mutx write output.txt --follow-lock-symlinks < input.txt
+mutx output.txt --follow-lock-symlinks < input.txt
 ```
 
 Rationale: Following symlinks can lead to:
@@ -134,17 +149,23 @@ mutx [OPTIONS] <OUTPUT>
 ### Housekeep Command
 
 ```
-mutx housekeep [OPTIONS] [DIR]
+mutx housekeep <SUBCOMMAND>
 ```
 
-**Options:**
-- `--clean-locks`: Clean orphaned lock files
-- `--clean-backups`: Clean old backup files
-- `--all`: Clean both locks and backups
+**Subcommands:**
+- `locks [DIR]` - Clean orphaned lock files (default: cache directory)
+- `backups [DIR]` - Clean old backup files (default: current directory)
+- `all [DIR]` - Clean both locks and backups
+
+**Common Options:**
 - `-r, --recursive`: Scan subdirectories
 - `--older-than <DURATION>`: Age threshold (e.g., "2h", "7d")
-- `--keep-newest <N>`: Keep N newest backups per file
+- `--keep-newest <N>`: Keep N newest backups per file (backups only)
+- `--suffix <SUFFIX>`: Custom backup suffix to match (backups/all, default: .mutx.backup)
+- `--locks-dir <DIR>`: Lock directory (all command only, requires --backups-dir)
+- `--backups-dir <DIR>`: Backup directory (all command only, requires --locks-dir)
 - `-n, --dry-run`: Show what would be deleted
+- `-v, --verbose`: Show detailed output
 
 ## Examples
 
@@ -173,14 +194,29 @@ jq '.setting = "new"' app.json | mutx --backup app.json
 transform_data.py < input.csv | mutx --stream output.csv
 ```
 
-### Lock Cleanup
+### Lock and Backup Cleanup
 
 ```bash
-# Clean locks older than 1 hour
-mutx housekeep --clean-locks --older-than 1h /var/lib/app
+# Clean locks from cache directory
+mutx housekeep locks
 
-# Keep only 3 newest backups
-mutx housekeep --clean-backups --keep-newest 3 /data
+# Clean locks older than 1 hour
+mutx housekeep locks --older-than 1h
+
+# Clean backups, keep 3 newest per file
+mutx housekeep backups --keep-newest 3 /data
+
+# Clean custom backup suffix
+mutx housekeep backups --suffix .bak
+
+# Clean both from same directory
+mutx housekeep all /var/lib/app
+
+# Clean both from different directories
+mutx housekeep all --locks-dir ~/.cache/mutx/locks --backups-dir /data
+
+# Dry run to see what would be cleaned
+mutx housekeep all --dry-run /var/lib/app
 ```
 
 ## Exit Codes
