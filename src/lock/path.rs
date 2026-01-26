@@ -98,7 +98,7 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
 }
 
 /// Get the platform-specific cache directory for lock files
-fn get_lock_cache_dir() -> Result<PathBuf> {
+pub fn get_lock_cache_dir() -> Result<PathBuf> {
     let proj_dirs = ProjectDirs::from("", "", "mutx").ok_or_else(|| {
         MutxError::Other("Could not determine cache directory".to_string())
     })?;
