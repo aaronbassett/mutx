@@ -13,7 +13,8 @@ fn test_housekeep_clean_locks() {
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg("--clean-locks")
+        .arg("locks")
+        .arg("--verbose")
         .arg(dir.path())
         .assert()
         .success()
@@ -30,8 +31,9 @@ fn test_housekeep_dry_run() {
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg("--clean-locks")
+        .arg("locks")
         .arg("--dry-run")
+        .arg("--verbose")
         .arg(dir.path())
         .assert()
         .success()
@@ -54,7 +56,7 @@ fn test_housekeep_clean_backups() {
 
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg("--clean-backups")
+        .arg("backups")
         .arg("--keep-newest")
         .arg("1")
         .arg(dir.path())
@@ -72,13 +74,10 @@ fn test_housekeep_clean_backups() {
 }
 
 #[test]
-fn test_housekeep_requires_operation() {
-    let dir = TempDir::new().unwrap();
-
+fn test_housekeep_requires_subcommand() {
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg(dir.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("at least one operation"));
+        .stderr(predicate::str::contains("Usage: mutx housekeep <COMMAND>"));
 }

@@ -97,8 +97,9 @@ fn test_housekeep_full_workflow() {
     // Dry run first
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg("--all")
+        .arg("all")
         .arg("--dry-run")
+        .arg("--verbose")
         .arg(dir.path())
         .assert()
         .success()
@@ -110,7 +111,7 @@ fn test_housekeep_full_workflow() {
     // Real cleanup
     let mut cmd = Command::cargo_bin("mutx").unwrap();
     cmd.arg("housekeep")
-        .arg("--all")
+        .arg("all")
         .arg(dir.path())
         .assert()
         .success();
