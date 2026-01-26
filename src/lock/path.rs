@@ -93,10 +93,32 @@ pub fn derive_lock_path(output_path: &Path, is_custom: bool) -> Result<PathBuf> 
     Ok(cache_dir.join(lock_filename))
 }
 
-/// Get the platform-specific cache directory for lock files
+/// Get the platform-specific cache directory for lock files.
+///
+/// Returns an error if the cache directory cannot be determined
+/// (e.g., on systems without a home directory or with permission issues).
+///
+/// Users can work around this by providing an explicit directory
+/// to housekeep commands.
+///
+/// # Manual Testing
+///
+/// ```bash
+/// # Restrict cache directory permissions
+/// chmod 000 ~/.cache
+/// mutx housekeep locks
+/// # Should show error, not panic
+/// chmod 755 ~/.cache  # Restore
+/// ```
 pub fn get_lock_cache_dir() -> Result<PathBuf> {
     let proj_dirs = ProjectDirs::from("", "", "mutx")
-        .ok_or_else(|| MutxError::Other("Could not determine cache directory".to_string()))?;
+        .ok_or_else(|| {
+            MutxError::Other(
+                "Failed to determine lock cache directory. \
+                 Try specifying an explicit directory with the DIR argument."
+                    .to_string(),
+            )
+        })?;
 
     let cache_dir = proj_dirs.cache_dir().join("locks");
 

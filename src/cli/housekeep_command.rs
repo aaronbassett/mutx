@@ -37,7 +37,10 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             verbose,
         } => {
             // Smart default: use cache directory
-            let target_dir = dir.unwrap_or_else(|| get_lock_cache_dir().unwrap());
+            let target_dir = match dir {
+                Some(d) => d,
+                None => get_lock_cache_dir()?,
+            };
 
             let duration = older_than.map(|s| parse_duration(&s)).transpose()?;
 
