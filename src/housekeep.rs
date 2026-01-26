@@ -151,9 +151,18 @@ where
         let entry = entry.map_err(MutxError::Io)?;
         let path = entry.path();
 
-        if path.is_dir() && recursive {
+        // Get file type WITHOUT following symlinks
+        let file_type = entry.file_type().map_err(MutxError::Io)?;
+
+        // Skip symlinks entirely (don't traverse, don't process)
+        if file_type.is_symlink() {
+            debug!("Skipping symlink: {}", path.display());
+            continue;
+        }
+
+        if file_type.is_dir() && recursive {
             visit_directory(&path, recursive, visitor)?;
-        } else if path.is_file() {
+        } else if file_type.is_file() {
             visitor(&path)?;
         }
     }
