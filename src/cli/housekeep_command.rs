@@ -71,6 +71,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             older_than: duration,
             keep_newest,
             dry_run,
+            suffix: ".mutx.backup".to_string(),
         };
 
         let cleaned = clean_backups(&config)?;

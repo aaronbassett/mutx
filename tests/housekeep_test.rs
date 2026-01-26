@@ -117,6 +117,7 @@ fn test_ignores_user_backup_files() {
         older_than: Some(Duration::from_secs(0)), // Clean all
         keep_newest: None,
         dry_run: false,
+        suffix: ".mutx.backup".to_string(),
     };
 
     let cleaned = clean_backups(&config).unwrap();
@@ -129,4 +130,37 @@ fn test_ignores_user_backup_files() {
     assert!(temp.path().join("file.backup").exists());
     assert!(temp.path().join("file.bak").exists());
     assert!(temp.path().join("file.20260125.backup").exists());
+}
+
+#[test]
+fn test_cleans_custom_suffix_backups() {
+    let dir = TempDir::new().unwrap();
+
+    // Create backups with custom suffix
+    fs::write(dir.path().join("file.txt.bak"), "backup1").unwrap();
+    fs::write(
+        dir.path().join("file.txt.20260126_120000.bak"),
+        "backup2",
+    )
+    .unwrap();
+
+    // Should not touch .mutx.backup files
+    fs::write(dir.path().join("other.txt.mutx.backup"), "keep").unwrap();
+
+    let config = CleanBackupConfig {
+        dir: dir.path().to_path_buf(),
+        recursive: false,
+        older_than: None,
+        keep_newest: Some(1),
+        dry_run: false,
+        suffix: ".bak".to_string(),
+    };
+
+    let cleaned = clean_backups(&config).unwrap();
+
+    // Should clean one .bak file (keeping newest)
+    assert_eq!(cleaned.len(), 1);
+
+    // .mutx.backup file should still exist
+    assert!(dir.path().join("other.txt.mutx.backup").exists());
 }

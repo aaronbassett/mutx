@@ -20,6 +20,7 @@ pub struct CleanBackupConfig {
     pub older_than: Option<Duration>,
     pub keep_newest: Option<usize>,
     pub dry_run: bool,
+    pub suffix: String,
 }
 
 /// Clean orphaned lock files
@@ -73,10 +74,10 @@ pub fn clean_backups(config: &CleanBackupConfig) -> Result<Vec<PathBuf>> {
 
     // Collect all backups grouped by base filename
     visit_directory(&config.dir, config.recursive, &mut |path| {
-        if is_backup_file(path) {
+        if is_backup_file(path, &config.suffix) {
             if let Ok(metadata) = fs::metadata(path) {
                 if let Ok(mtime) = metadata.modified() {
-                    let base = extract_base_filename(path);
+                    let base = extract_base_filename(path, &config.suffix);
                     backups
                         .entry(base)
                         .or_default()
@@ -173,55 +174,53 @@ fn is_lock_file(path: &Path) -> bool {
     path.extension().and_then(|s| s.to_str()) == Some("lock")
 }
 
-fn is_backup_file(path: &Path) -> bool {
+fn is_backup_file(path: &Path, suffix: &str) -> bool {
     path.file_name()
         .and_then(|s| s.to_str())
-        .map(|name| name.ends_with(".mutx.backup"))
+        .map(|name| name.ends_with(suffix))
         .unwrap_or(false)
 }
 
-fn extract_base_filename(path: &Path) -> String {
+fn extract_base_filename(path: &Path, suffix: &str) -> String {
     let name = path
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("unknown");
 
-    // Must end with .mutx.backup
-    let without_suffix = match name.strip_suffix(".mutx.backup") {
+    // Must end with the suffix
+    let without_suffix = match name.strip_suffix(suffix) {
         Some(s) => s,
         None => return name.to_string(),
     };
 
-    // Split to get timestamp part: filename.YYYYMMDD_HHMMSS
+    // Try to parse timestamp: filename.YYYYMMDD_HHMMSS
     let parts: Vec<&str> = without_suffix.rsplitn(2, '.').collect();
-    if parts.len() != 2 {
-        // No timestamp, return as-is
-        return without_suffix.to_string();
+    if parts.len() == 2 {
+        let timestamp = parts[0];
+        if is_valid_timestamp(timestamp) {
+            return parts[1].to_string();  // Base filename without timestamp
+        }
     }
 
-    let timestamp = parts[0];
-    let base = parts[1];
+    // No timestamp found, return without suffix
+    without_suffix.to_string()
+}
 
-    // Validate timestamp format: YYYYMMDD_HHMMSS (15 chars)
-    if timestamp.len() != 15 {
-        return without_suffix.to_string();
+fn is_valid_timestamp(s: &str) -> bool {
+    // YYYYMMDD_HHMMSS format (15 chars)
+    if s.len() != 15 {
+        return false;
     }
-
-    if timestamp.chars().nth(8) != Some('_') {
-        return without_suffix.to_string();
+    
+    if s.chars().nth(8) != Some('_') {
+        return false;
     }
-
-    let date_part = &timestamp[..8];
-    let time_part = &timestamp[9..];
-
-    if !date_part.chars().all(|c| c.is_ascii_digit())
-        || !time_part.chars().all(|c| c.is_ascii_digit())
-    {
-        return without_suffix.to_string();
-    }
-
-    // Valid timestamp format, return base filename
-    base.to_string()
+    
+    let date_part = &s[..8];
+    let time_part = &s[9..];
+    
+    date_part.chars().all(|c| c.is_ascii_digit())
+        && time_part.chars().all(|c| c.is_ascii_digit())
 }
 
 fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {
