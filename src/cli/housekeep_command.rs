@@ -15,7 +15,12 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
         keep_newest,
         dry_run,
         verbose,
-    } = cmd;
+    } = cmd
+    else {
+        return Err(MutxError::Other(
+            "Internal error: expected Housekeep command".to_string(),
+        ));
+    };
     let target_dir = dir.unwrap_or_else(|| PathBuf::from("."));
 
     if !do_clean_locks && !do_clean_backups && !all {

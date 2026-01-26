@@ -77,6 +77,71 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
+    /// Write to a file atomically (default command)
+    Write {
+        /// Target file path
+        #[arg(value_name = "OUTPUT")]
+        output: PathBuf,
+
+        /// Read from file instead of stdin
+        #[arg(short, long, value_name = "FILE")]
+        input: Option<PathBuf>,
+
+        /// Use streaming mode (constant memory)
+        #[arg(long)]
+        stream: bool,
+
+        /// Fail immediately if locked (default: wait)
+        #[arg(long)]
+        no_wait: bool,
+
+        /// Wait timeout in milliseconds (implies wait mode)
+        #[arg(short = 't', long, value_name = "MILLISECONDS", conflicts_with = "no_wait")]
+        timeout: Option<u64>,
+
+        /// Maximum polling interval in milliseconds (default: 1000)
+        #[arg(long, value_name = "MILLISECONDS", requires = "timeout")]
+        max_poll_interval: Option<u64>,
+
+        /// Custom lock file location
+        #[arg(long, value_name = "PATH")]
+        lock_file: Option<PathBuf>,
+
+        /// Follow symbolic links for output files
+        #[arg(long)]
+        follow_symlinks: bool,
+
+        /// Follow symbolic links even for lock files (implies --follow-symlinks)
+        /// WARNING: May be a security risk
+        #[arg(long)]
+        follow_lock_symlinks: bool,
+
+        /// Create backup before overwrite
+        #[arg(short = 'b', long)]
+        backup: bool,
+
+        /// Backup filename suffix
+        #[arg(
+            long,
+            value_name = "SUFFIX",
+            default_value = ".mutx.backup",
+            requires = "backup"
+        )]
+        backup_suffix: String,
+
+        /// Store backups in directory
+        #[arg(long, value_name = "DIR", requires = "backup")]
+        backup_dir: Option<PathBuf>,
+
+        /// Add timestamp to backup filename
+        #[arg(long, requires = "backup")]
+        backup_timestamp: bool,
+
+        /// Verbose output
+        #[arg(short = 'v', action = clap::ArgAction::Count)]
+        verbose: u8,
+    },
+
     /// Housekeeping operations
     Housekeep {
         /// Directory to clean (default: current directory)

@@ -1,4 +1,3 @@
-use crate::cli::Args;
 use mutx::{
     check_lock_symlink, check_symlink, create_backup, derive_lock_path, validate_lock_path,
     AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result, TimeoutConfig,
@@ -6,19 +5,33 @@ use mutx::{
 };
 use std::fs::File;
 use std::io::{self, Read};
+use std::path::PathBuf;
 use std::time::Duration;
 
-pub fn execute_write(args: Args) -> Result<()> {
-    let output = args
-        .output
-        .ok_or_else(|| MutxError::Other("Output file required".to_string()))?;
+#[allow(clippy::too_many_arguments)]
+pub fn execute_write(
+    output: PathBuf,
+    input: Option<PathBuf>,
+    stream: bool,
+    no_wait: bool,
+    timeout: Option<u64>,
+    max_poll_interval: Option<u64>,
+    backup: bool,
+    backup_suffix: String,
+    backup_dir: Option<PathBuf>,
+    backup_timestamp: bool,
+    lock_file: Option<PathBuf>,
+    follow_symlinks: bool,
+    follow_lock_symlinks: bool,
+    verbose: u8,
+) -> Result<()> {
 
     // Determine symlink policy
-    let follow_symlinks = args.follow_lock_symlinks || args.follow_symlinks;
-    let follow_lock_symlinks = args.follow_lock_symlinks;
+    let follow_symlinks_effective = follow_lock_symlinks || follow_symlinks;
+    let follow_lock_symlinks_effective = follow_lock_symlinks;
 
     // Validate input file exists if provided
-    if let Some(input_path) = &args.input {
+    if let Some(input_path) = &input {
         if !input_path.exists() {
             return Err(MutxError::PathNotFound(input_path.clone()));
         }
@@ -27,26 +40,26 @@ pub fn execute_write(args: Args) -> Result<()> {
         }
 
         // Check if input is a symlink
-        check_symlink(input_path, follow_symlinks)?;
+        check_symlink(input_path, follow_symlinks_effective)?;
     }
 
     // Check if output is a symlink
-    check_symlink(&output, follow_symlinks)?;
+    check_symlink(&output, follow_symlinks_effective)?;
 
     // Validate backup directory is a directory if provided
-    if let Some(backup_dir) = &args.backup_dir {
-        if backup_dir.exists() && !backup_dir.is_dir() {
-            return Err(MutxError::NotADirectory(backup_dir.clone()));
+    if let Some(backup_dir_ref) = &backup_dir {
+        if backup_dir_ref.exists() && !backup_dir_ref.is_dir() {
+            return Err(MutxError::NotADirectory(backup_dir_ref.clone()));
         }
     }
 
     // Determine lock strategy
-    let lock_strategy = if args.no_wait {
+    let lock_strategy = if no_wait {
         LockStrategy::NoWait
-    } else if let Some(timeout_ms) = args.timeout {
+    } else if let Some(timeout_ms) = timeout {
         let mut config = TimeoutConfig::new(Duration::from_millis(timeout_ms));
 
-        if let Some(max_interval_ms) = args.max_poll_interval {
+        if let Some(max_interval_ms) = max_poll_interval {
             config = config.with_max_interval(Duration::from_millis(max_interval_ms));
         }
 
@@ -56,7 +69,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     };
 
     // Determine lock file path
-    let lock_path = if let Some(custom_lock) = args.lock_file {
+    let lock_path = if let Some(custom_lock) = lock_file {
         custom_lock
     } else {
         derive_lock_path(&output, false)?
@@ -66,32 +79,32 @@ pub fn execute_write(args: Args) -> Result<()> {
     validate_lock_path(&lock_path, &output)?;
 
     // Check if lock path is a symlink
-    check_lock_symlink(&lock_path, follow_lock_symlinks)?;
+    check_lock_symlink(&lock_path, follow_lock_symlinks_effective)?;
 
     // Acquire lock
     let _lock = FileLock::acquire(&lock_path, lock_strategy)?;
 
-    if args.verbose > 0 {
+    if verbose > 0 {
         eprintln!("Lock acquired: {}", lock_path.display());
     }
 
     // Create backup if requested
-    if args.backup {
+    if backup {
         let backup_config = BackupConfig {
             source: output.clone(),
-            suffix: args.backup_suffix,
-            directory: args.backup_dir,
-            timestamp: args.backup_timestamp,
+            suffix: backup_suffix,
+            directory: backup_dir,
+            timestamp: backup_timestamp,
         };
 
         let backup_path = create_backup(&backup_config)?;
-        if args.verbose > 0 {
+        if verbose > 0 {
             eprintln!("Backup created: {}", backup_path.display());
         }
     }
 
     // Determine write mode
-    let mode = if args.stream {
+    let mode = if stream {
         WriteMode::Streaming
     } else {
         WriteMode::Simple
@@ -101,7 +114,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     let mut writer = AtomicWriter::new(&output, mode)?;
 
     // Read input
-    let mut input: Box<dyn Read> = if let Some(input_file) = args.input {
+    let mut input_reader: Box<dyn Read> = if let Some(input_file) = input {
         Box::new(File::open(&input_file).map_err(|e| MutxError::ReadFailed {
             path: input_file,
             source: e,
@@ -113,7 +126,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     // Copy data
     let mut buffer = [0u8; 8192];
     loop {
-        let n = input.read(&mut buffer)?;
+        let n = input_reader.read(&mut buffer)?;
         if n == 0 {
             break;
         }
@@ -123,7 +136,7 @@ pub fn execute_write(args: Args) -> Result<()> {
     // Commit write
     writer.commit()?;
 
-    if args.verbose > 0 {
+    if verbose > 0 {
         eprintln!("Write completed: {}", output.display());
     }
 
