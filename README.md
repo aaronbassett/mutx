@@ -209,14 +209,14 @@ mutx housekeep backups --keep-newest 3 /data
 # Clean custom backup suffix
 mutx housekeep backups --suffix .bak
 
-# Clean both from same directory
+# Clean both locks (from cache) and backups (from data dir)
+mutx housekeep all --locks-dir ~/.cache/mutx/locks --backups-dir /var/lib/app
+
+# Clean both from same directory (only when using custom --lock-file paths)
 mutx housekeep all /var/lib/app
 
-# Clean both from different directories
-mutx housekeep all --locks-dir ~/.cache/mutx/locks --backups-dir /data
-
 # Dry run to see what would be cleaned
-mutx housekeep all --dry-run /var/lib/app
+mutx housekeep all --dry-run --locks-dir ~/.cache/mutx/locks --backups-dir /var/lib/app
 ```
 
 ## Exit Codes
