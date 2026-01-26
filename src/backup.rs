@@ -104,13 +104,16 @@ mod tests {
 
         let config = BackupConfig {
             source,
-            suffix: ".bak".to_string(),
+            suffix: ".mutx.backup".to_string(),
             directory: None,
             timestamp: false,
         };
 
         let path = generate_backup_path(&config).unwrap();
-        assert_eq!(path.file_name().unwrap().to_str().unwrap(), "test.txt.bak");
+        assert_eq!(
+            path.file_name().unwrap().to_str().unwrap(),
+            "test.txt.mutx.backup"
+        );
     }
 
     #[test]
@@ -121,7 +124,7 @@ mod tests {
 
         let config = BackupConfig {
             source,
-            suffix: ".bak".to_string(),
+            suffix: ".mutx.backup".to_string(),
             directory: Some(backup_dir.clone()),
             timestamp: false,
         };

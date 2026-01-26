@@ -24,7 +24,7 @@ fn test_exit_code_1_on_general_error() {
 fn test_exit_code_2_on_lock_timeout() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("test.txt");
-    let lock_path = output.with_extension("lock");
+    let lock_path = mutx::derive_lock_path(&output, false).unwrap();
 
     let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
 
@@ -41,7 +41,7 @@ fn test_exit_code_2_on_lock_timeout() {
 fn test_exit_code_2_on_no_wait() {
     let dir = TempDir::new().unwrap();
     let output = dir.path().join("test.txt");
-    let lock_path = output.with_extension("lock");
+    let lock_path = mutx::derive_lock_path(&output, false).unwrap();
 
     let _lock = mutx::FileLock::acquire(&lock_path, mutx::LockStrategy::Wait).unwrap();
 

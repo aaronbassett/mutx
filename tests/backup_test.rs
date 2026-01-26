@@ -10,14 +10,14 @@ fn test_simple_backup_creation() {
 
     let config = BackupConfig {
         source: target.clone(),
-        suffix: ".backup".to_string(),
+        suffix: ".mutx.backup".to_string(),
         directory: None,
         timestamp: false,
     };
 
     create_backup(&config).unwrap();
 
-    let backup_path = target.with_extension("txt.backup");
+    let backup_path = dir.path().join("test.txt.mutx.backup");
     assert!(backup_path.exists());
     assert_eq!(
         fs::read_to_string(&backup_path).unwrap(),
@@ -33,7 +33,7 @@ fn test_backup_with_timestamp() {
 
     let config = BackupConfig {
         source: target.clone(),
-        suffix: ".backup".to_string(),
+        suffix: ".mutx.backup".to_string(),
         directory: None,
         timestamp: true,
     };
@@ -52,7 +52,7 @@ fn test_backup_with_timestamp() {
         .unwrap()
         .to_str()
         .unwrap()
-        .contains(".backup"));
+        .contains(".mutx.backup"));
     assert_eq!(fs::read_to_string(&backup_path).unwrap(), "original");
 }
 
@@ -67,14 +67,14 @@ fn test_backup_to_directory() {
 
     let config = BackupConfig {
         source: target.clone(),
-        suffix: ".backup".to_string(),
+        suffix: ".mutx.backup".to_string(),
         directory: Some(backup_dir.clone()),
         timestamp: false,
     };
 
     create_backup(&config).unwrap();
 
-    let backup_path = backup_dir.join("test.txt.backup");
+    let backup_path = backup_dir.join("test.txt.mutx.backup");
     assert!(backup_path.exists());
     assert_eq!(fs::read_to_string(&backup_path).unwrap(), "original");
 }
@@ -86,7 +86,7 @@ fn test_backup_nonexistent_file_fails() {
 
     let config = BackupConfig {
         source: target.clone(),
-        suffix: ".backup".to_string(),
+        suffix: ".mutx.backup".to_string(),
         directory: None,
         timestamp: false,
     };

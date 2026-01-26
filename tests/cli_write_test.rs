@@ -79,7 +79,7 @@ fn test_backup_creation() {
         .assert()
         .success();
 
-    let backup = output.with_extension("txt.backup");
+    let backup = dir.path().join("file.txt.mutx.backup");
     assert!(backup.exists());
     assert_eq!(fs::read_to_string(&backup).unwrap(), "original");
     assert_eq!(fs::read_to_string(&output).unwrap(), "updated");
@@ -93,7 +93,9 @@ fn test_lock_no_wait_fails_when_locked() {
 
     let dir = TempDir::new().unwrap();
     let output = Arc::new(dir.path().join("locked.txt"));
-    let lock_path = output.with_extension("lock");
+
+    // Use derive_lock_path to get the correct lock location (cache directory)
+    let lock_path = mutx::derive_lock_path(&output, false).unwrap();
 
     let output_clone = output.clone();
     let handle = thread::spawn(move || {

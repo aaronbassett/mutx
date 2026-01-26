@@ -24,5 +24,5 @@ fn test_version_flag() {
     cmd.arg("--version")
         .assert()
         .success()
-        .stdout(predicate::str::contains("1.0.0"));
+        .stdout(predicate::str::contains("1.1.0"));
 }

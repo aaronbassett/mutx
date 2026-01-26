@@ -18,7 +18,8 @@ fn test_lock_and_write_integration() {
     assert_eq!(fs::read_to_string(&target).unwrap(), "locked write");
 
     drop(_lock);
-    assert!(!lock_path.exists());
+    // Lock files persist after release for proper mutual exclusion (v1.1.0 behavior)
+    assert!(lock_path.exists());
 }
 
 #[test]
