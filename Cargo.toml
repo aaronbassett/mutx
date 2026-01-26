@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "mutx-macros"]
+
 [package]
 name = "mutx"
 version = "1.1.0"
@@ -15,6 +18,7 @@ name = "mutx"
 path = "src/main.rs"
 
 [dependencies]
+mutx-macros = { path = "mutx-macros" }
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
 atomic-write-file = "0.2"
 fs2 = "0.4"
