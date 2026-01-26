@@ -52,7 +52,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             };
 
             let cleaned = clean_locks(&config)?;
-            report_cleaning_results("lock", &cleaned, verbose);
+            report_cleaning_results("lock", &cleaned, verbose, dry_run);
             Ok(())
         }
 
@@ -82,7 +82,7 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             };
 
             let cleaned = clean_backups(&config)?;
-            report_cleaning_results("backup", &cleaned, verbose);
+            report_cleaning_results("backup", &cleaned, verbose, dry_run);
             Ok(())
         }
 
@@ -133,18 +133,25 @@ pub fn execute_housekeep(cmd: Command) -> Result<()> {
             let cleaned_backups = clean_backups(&backup_config)?;
 
             // Report both
-            report_cleaning_results("lock", &cleaned_locks, verbose);
-            report_cleaning_results("backup", &cleaned_backups, verbose);
+            report_cleaning_results("lock", &cleaned_locks, verbose, dry_run);
+            report_cleaning_results("backup", &cleaned_backups, verbose, dry_run);
             Ok(())
         }
     }
 }
 
-fn report_cleaning_results(item_type: &str, cleaned: &[PathBuf], verbose: bool) {
+fn report_cleaning_results(
+    item_type: &str,
+    cleaned: &[PathBuf],
+    verbose: bool,
+    dry_run: bool,
+) {
+    let verb = if dry_run { "Would clean" } else { "Cleaned" };
+
     if cleaned.is_empty() {
         println!("No {} files to clean", item_type);
     } else {
-        println!("Cleaned {} {} file(s)", cleaned.len(), item_type);
+        println!("{} {} {} file(s)", verb, cleaned.len(), item_type);
         if verbose {
             for path in cleaned {
                 println!("  - {}", path.display());
