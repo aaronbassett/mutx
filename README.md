@@ -49,12 +49,66 @@ echo "new content" | mutx --backup config.json
 # Large file streaming
 cat large_file.csv | mutx --stream output.csv
 
-# Wait for lock with timeout
-generate_config.sh | mutx --timeout 30 config.json
+# Wait for lock with timeout (5 seconds)
+generate_config.sh | mutx --timeout 5000 config.json
 
 # Fail fast if locked
 mutx --no-wait config.json < data.txt
 ```
+
+## Lock File Behavior
+
+mutx uses file locks to coordinate between processes. Lock files are automatically
+created in your platform's cache directory (not alongside your output files).
+
+### Lock Persistence
+
+Lock files persist after your command completes. This is intentional and prevents
+race conditions where one process might wait on a deleted lock file while another
+creates a new one.
+
+To clean up orphaned lock files:
+
+```bash
+mutx housekeep --clean-locks
+```
+
+### Custom Lock Locations
+
+You can specify a custom lock file location:
+
+```bash
+mutx write output.txt --lock-file /tmp/my-custom.lock
+```
+
+Note: Custom lock files are not automatically cleaned by housekeep.
+
+## Security Considerations
+
+### Symlink Handling
+
+By default, mutx rejects symbolic links for security:
+
+```bash
+# This will fail if output.txt is a symlink
+mutx write output.txt < input.txt
+
+# Allow symlinks for output files
+mutx write output.txt --follow-symlinks < input.txt
+
+# Allow symlinks even for lock files (not recommended)
+mutx write output.txt --follow-lock-symlinks < input.txt
+```
+
+Rationale: Following symlinks can lead to:
+- Unintended file overwrites in lock file handling
+- Directory traversal attacks in housekeeping operations
+- Confusion about which file is actually being modified
+
+### Backup Format
+
+Backups use the format `{filename}.{YYYYMMDD_HHMMSS}.mutx.backup` to prevent
+accidental deletion of user backup files during housekeeping.
 
 ## Usage
 
@@ -68,10 +122,13 @@ mutx [OPTIONS] <OUTPUT>
 - `-i, --input <FILE>`: Read from file instead of stdin
 - `--stream`: Use streaming mode for large files
 - `--no-wait`: Fail immediately if locked (default: wait)
-- `-t, --timeout <SECONDS>`: Lock acquisition timeout (implies wait)
+- `-t, --timeout <MILLISECONDS>`: Lock acquisition timeout (implies wait)
+- `--max-poll-interval <MS>`: Maximum poll interval for exponential backoff (default: 1000ms)
 - `-b, --backup`: Create backup before overwrite
-- `--backup-suffix <SUFFIX>`: Custom backup suffix (default: .backup)
+- `--backup-suffix <SUFFIX>`: Custom backup suffix (default: .mutx.backup)
 - `--backup-timestamp`: Add timestamp to backup
+- `--follow-symlinks`: Allow symbolic links for output files
+- `--follow-lock-symlinks`: Allow symbolic links for lock files (not recommended)
 - `-v`: Verbose output (-vv for debug)
 
 ### Housekeep Command
@@ -133,10 +190,21 @@ mutx housekeep --clean-backups --keep-newest 3 /data
 - `2`: Lock acquisition failed (timeout or no-wait)
 - `3`: Interrupted (SIGINT, SIGTERM)
 
+## Platform Support
+
+- **Unix/Linux/macOS**: Fully supported and tested. Primary development platforms.
+- **Windows**: Tests pass in CI, but not actively used or tested by maintainers.
+  File locking behavior may differ from Unix platforms. Use with caution in production.
+  Feedback and bug reports welcome!
+
+Lock files are stored in platform-specific cache directories:
+- Linux: `~/.cache/mutx/locks/`
+- macOS: `~/Library/Caches/mutx/locks/`
+- Windows: `%LOCALAPPDATA%\mutx\locks\`
+
 ## Limitations
 
 - **Advisory locks only**: Non-cooperating processes can still write
-- **Unix/Linux/macOS only**: Windows support planned for v2.0
 - **Lock files orphaned on SIGKILL**: Use housekeep command for cleanup
 - **Single backup generation**: Use `--backup-timestamp` for multiple versions
 
