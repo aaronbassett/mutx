@@ -1,7 +1,8 @@
 use crate::cli::Args;
 use mutx::{
-    create_backup, derive_lock_path, validate_lock_path, AtomicWriter, BackupConfig, FileLock,
-    LockStrategy, MutxError, Result, TimeoutConfig, WriteMode,
+    check_lock_symlink, check_symlink, create_backup, derive_lock_path, validate_lock_path,
+    AtomicWriter, BackupConfig, FileLock, LockStrategy, MutxError, Result, TimeoutConfig,
+    WriteMode,
 };
 use std::fs::File;
 use std::io::{self, Read};
@@ -12,6 +13,10 @@ pub fn execute_write(args: Args) -> Result<()> {
         .output
         .ok_or_else(|| MutxError::Other("Output file required".to_string()))?;
 
+    // Determine symlink policy
+    let follow_symlinks = args.follow_lock_symlinks || args.follow_symlinks;
+    let follow_lock_symlinks = args.follow_lock_symlinks;
+
     // Validate input file exists if provided
     if let Some(input_path) = &args.input {
         if !input_path.exists() {
@@ -20,7 +25,13 @@ pub fn execute_write(args: Args) -> Result<()> {
         if !input_path.is_file() {
             return Err(MutxError::NotAFile(input_path.clone()));
         }
+
+        // Check if input is a symlink
+        check_symlink(input_path, follow_symlinks)?;
     }
+
+    // Check if output is a symlink
+    check_symlink(&output, follow_symlinks)?;
 
     // Validate backup directory is a directory if provided
     if let Some(backup_dir) = &args.backup_dir {
@@ -53,6 +64,9 @@ pub fn execute_write(args: Args) -> Result<()> {
 
     // Validate lock path
     validate_lock_path(&lock_path, &output)?;
+
+    // Check if lock path is a symlink
+    check_lock_symlink(&lock_path, follow_lock_symlinks)?;
 
     // Acquire lock
     let _lock = FileLock::acquire(&lock_path, lock_strategy)?;

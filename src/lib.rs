@@ -12,4 +12,5 @@ pub use backup::{create_backup, BackupConfig};
 pub use error::{MutxError, Result};
 pub use housekeep::{clean_backups, clean_locks, CleanBackupConfig, CleanLockConfig};
 pub use lock::{derive_lock_path, validate_lock_path, FileLock, LockStrategy, TimeoutConfig};
+pub use utils::{check_lock_symlink, check_symlink};
 pub use write::{AtomicWriter, WriteMode};

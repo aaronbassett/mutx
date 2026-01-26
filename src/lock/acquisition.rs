@@ -51,15 +51,20 @@ impl FileLock {
         );
 
         // Create lock file
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(lock_path)
-            .map_err(|e| MutxError::LockCreationFailed {
-                path: lock_path.to_path_buf(),
-                source: e,
-            })?;
+        let mut opts = OpenOptions::new();
+        opts.create(true).write(true).truncate(true);
+
+        // On Unix, use O_NOFOLLOW to reject symlinks at OS level
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            opts.custom_flags(libc::O_NOFOLLOW);
+        }
+
+        let file = opts.open(lock_path).map_err(|e| MutxError::LockCreationFailed {
+            path: lock_path.to_path_buf(),
+            source: e,
+        })?;
 
         // Acquire lock based on strategy
         match strategy {

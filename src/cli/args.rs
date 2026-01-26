@@ -40,6 +40,15 @@ pub struct Args {
     #[arg(long, value_name = "PATH")]
     pub lock_file: Option<PathBuf>,
 
+    /// Follow symbolic links for output files and housekeep operations
+    #[arg(long)]
+    pub follow_symlinks: bool,
+
+    /// Follow symbolic links even for lock files (implies --follow-symlinks)
+    /// WARNING: May be a security risk
+    #[arg(long)]
+    pub follow_lock_symlinks: bool,
+
     /// Create backup before overwrite
     #[arg(short = 'b', long)]
     pub backup: bool,
