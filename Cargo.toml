@@ -3,7 +3,7 @@ members = [".", "mutx-macros"]
 
 [package]
 name = "mutx"
-version = "1.1.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Aaron Bassett"]
