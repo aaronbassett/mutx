@@ -174,29 +174,54 @@ fn is_lock_file(path: &Path) -> bool {
 }
 
 fn is_backup_file(path: &Path) -> bool {
-    if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
-        name.contains(".backup") || name.contains(".bak")
-    } else {
-        false
-    }
+    path.file_name()
+        .and_then(|s| s.to_str())
+        .map(|name| name.ends_with(".mutx.backup"))
+        .unwrap_or(false)
 }
 
 fn extract_base_filename(path: &Path) -> String {
-    path.file_name()
+    let name = path
+        .file_name()
         .and_then(|n| n.to_str())
-        .map(|name| {
-            // Extract base by removing timestamp and backup suffix
-            if let Some(pos) = name.find(".20") {
-                name[..pos].to_string()
-            } else if let Some(pos) = name.rfind(".backup") {
-                name[..pos].to_string()
-            } else if let Some(pos) = name.rfind(".bak") {
-                name[..pos].to_string()
-            } else {
-                name.to_string()
-            }
-        })
-        .unwrap_or_else(|| "unknown".to_string())
+        .unwrap_or("unknown");
+
+    // Must end with .mutx.backup
+    let without_suffix = match name.strip_suffix(".mutx.backup") {
+        Some(s) => s,
+        None => return name.to_string(),
+    };
+
+    // Split to get timestamp part: filename.YYYYMMDD_HHMMSS
+    let parts: Vec<&str> = without_suffix.rsplitn(2, '.').collect();
+    if parts.len() != 2 {
+        // No timestamp, return as-is
+        return without_suffix.to_string();
+    }
+
+    let timestamp = parts[0];
+    let base = parts[1];
+
+    // Validate timestamp format: YYYYMMDD_HHMMSS (15 chars)
+    if timestamp.len() != 15 {
+        return without_suffix.to_string();
+    }
+
+    if timestamp.chars().nth(8) != Some('_') {
+        return without_suffix.to_string();
+    }
+
+    let date_part = &timestamp[..8];
+    let time_part = &timestamp[9..];
+
+    if !date_part.chars().all(|c| c.is_ascii_digit())
+        || !time_part.chars().all(|c| c.is_ascii_digit())
+    {
+        return without_suffix.to_string();
+    }
+
+    // Valid timestamp format, return base filename
+    base.to_string()
 }
 
 fn is_orphaned(lock_path: &Path, older_than: Option<Duration>) -> Result<bool> {

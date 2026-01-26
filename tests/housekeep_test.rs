@@ -96,3 +96,37 @@ fn test_older_than_filter() {
     assert_eq!(cleaned[0], old_lock);
     assert!(recent_lock.exists(), "Recent lock should not be cleaned");
 }
+
+use mutx::housekeep::{clean_backups, CleanBackupConfig};
+
+#[test]
+fn test_ignores_user_backup_files() {
+    let temp = TempDir::new().unwrap();
+
+    // Create files that look similar but aren't mutx backups
+    fs::write(temp.path().join("file.backup"), b"user backup").unwrap();
+    fs::write(temp.path().join("file.bak"), b"user bak").unwrap();
+    fs::write(temp.path().join("file.20260125.backup"), b"user dated backup").unwrap();
+
+    // Create actual mutx backup
+    fs::write(temp.path().join("file.txt.20260125_143000.mutx.backup"), b"mutx backup").unwrap();
+
+    let config = CleanBackupConfig {
+        dir: temp.path().to_path_buf(),
+        recursive: false,
+        older_than: Some(Duration::from_secs(0)), // Clean all
+        keep_newest: None,
+        dry_run: false,
+    };
+
+    let cleaned = clean_backups(&config).unwrap();
+
+    // Should only clean the one mutx backup
+    assert_eq!(cleaned.len(), 1);
+    assert!(cleaned[0].to_str().unwrap().contains(".mutx.backup"));
+
+    // User files should still exist
+    assert!(temp.path().join("file.backup").exists());
+    assert!(temp.path().join("file.bak").exists());
+    assert!(temp.path().join("file.20260125.backup").exists());
+}

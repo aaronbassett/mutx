@@ -57,7 +57,7 @@ pub struct Args {
     #[arg(
         long,
         value_name = "SUFFIX",
-        default_value = ".backup",
+        default_value = ".mutx.backup",
         requires = "backup"
     )]
     pub backup_suffix: String,

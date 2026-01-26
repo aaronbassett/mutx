@@ -73,10 +73,10 @@ fn generate_backup_path(config: &BackupConfig) -> Result<PathBuf> {
         .to_string_lossy();
 
     let backup_name = if config.timestamp {
-        let timestamp = Local::now().format("%Y%m%d-%H%M%S");
-        format!("{}.{}{}", filename, timestamp, config.suffix)
+        let timestamp = Local::now().format("%Y%m%d_%H%M%S");
+        format!("{}.{}.mutx.backup", filename, timestamp)
     } else {
-        format!("{}{}", filename, config.suffix)
+        format!("{}.mutx.backup", filename)
     };
 
     let backup_path = if let Some(dir) = &config.directory {
