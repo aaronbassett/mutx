@@ -7,17 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Backup suffix validation now occurs before lock acquisition in write command
-- Incorrect help text for `--follow-symlinks` flag corrected
-- Misleading `housekeep all` examples in README clarified
-
-### Changed
-
-- Removed unused `mutx-macros` workspace dependency
-
-## [0.3.0] - 2026-01-26
+## [0.3.0] - 2026-01-30
 
 **Note:** Version numbers rolled back from v1.1.0 to v0.3.0 to better signal
 pre-release status. Version 1.0.0 is reserved for the first stable public release.
@@ -31,6 +21,9 @@ pre-release status. Version 1.0.0 is reserved for the first stable public releas
 
 ### Fixed
 
+- Backup suffix validation now occurs before lock acquisition in write command
+- Incorrect help text for `--follow-symlinks` flag corrected
+- Misleading `housekeep all` examples in README clarified
 - **CRITICAL:** `--backup-suffix` now functional (was silently ignored in v1.1.0)
 - Housekeep locks defaults to cache directory instead of current directory
 - README examples corrected to match actual CLI syntax
@@ -72,6 +65,7 @@ pre-release status. Version 1.0.0 is reserved for the first stable public releas
   - Old backup format no longer recognized by housekeep (manual cleanup if needed)
 - **BREAKING:** Default backup suffix changed from `.backup` to `.mutx.backup`
 - Version numbering strategy: v0.x for pre-release, v1.0.0+ for stable
+- Removed unused `mutx-macros` workspace dependency
 
 ### Security
 
