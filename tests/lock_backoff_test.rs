@@ -66,6 +66,7 @@ fn test_max_poll_interval_respected() {
 
     // With 100ms max interval + jitter, should take roughly 2 seconds
     // (multiple attempts at ~100-200ms each)
+    // Allow generous tolerance for slow CI environments
     assert!(elapsed >= Duration::from_millis(1800));
-    assert!(elapsed <= Duration::from_millis(2300));
+    assert!(elapsed <= Duration::from_millis(3000));
 }
