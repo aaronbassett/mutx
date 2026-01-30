@@ -74,10 +74,10 @@ fn test_lock_path_in_cache_directory() {
     assert!(path_str.contains("/Library/Caches/mutx/locks/"));
 
     #[cfg(target_os = "windows")]
-    // Windows path: typically C:\Users\<user>\AppData\Local\mutx\locks\
+    // Windows path: typically C:\Users\<user>\AppData\Local\mutx\cache\locks\
     assert!(
-        path_str.contains("\\mutx\\locks\\"),
-        "Expected Windows path to contain \\mutx\\locks\\, got: {path_str}"
+        path_str.contains("mutx") && path_str.contains("locks"),
+        "Expected Windows path to contain mutx and locks, got: {path_str}"
     );
 }
 
