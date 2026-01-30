@@ -7,6 +7,24 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use tracing::debug;
 
+/// Check if an I/O error indicates lock contention (file locked by another process)
+fn is_lock_contention(e: &io::Error) -> bool {
+    // Check for WouldBlock (Unix)
+    if e.kind() == io::ErrorKind::WouldBlock {
+        return true;
+    }
+    // Check for Windows-specific lock errors
+    // ERROR_LOCK_VIOLATION (33) - file region is locked
+    // ERROR_SHARING_VIOLATION (32) - file in use by another process
+    #[cfg(windows)]
+    if let Some(code) = e.raw_os_error() {
+        if code == 33 || code == 32 {
+            return true;
+        }
+    }
+    false
+}
+
 #[derive(Debug, Clone)]
 pub struct TimeoutConfig {
     pub duration: Duration,
@@ -78,12 +96,15 @@ impl FileLock {
                     })?;
             }
             LockStrategy::NoWait => {
-                file.try_lock_exclusive().map_err(|e| match e.kind() {
-                    io::ErrorKind::WouldBlock => MutxError::LockWouldBlock(lock_path.to_path_buf()),
-                    _ => MutxError::LockAcquisitionFailed {
-                        path: lock_path.to_path_buf(),
-                        source: e,
-                    },
+                file.try_lock_exclusive().map_err(|e| {
+                    if is_lock_contention(&e) {
+                        MutxError::LockWouldBlock(lock_path.to_path_buf())
+                    } else {
+                        MutxError::LockAcquisitionFailed {
+                            path: lock_path.to_path_buf(),
+                            source: e,
+                        }
+                    }
                 })?;
             }
             LockStrategy::Timeout(config) => {
@@ -94,7 +115,7 @@ impl FileLock {
                 loop {
                     match file.try_lock_exclusive() {
                         Ok(_) => break,
-                        Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+                        Err(e) if is_lock_contention(&e) => {
                             if start.elapsed() >= config.duration {
                                 return Err(MutxError::LockTimeout {
                                     path: lock_path.to_path_buf(),

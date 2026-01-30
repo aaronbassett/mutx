@@ -73,12 +73,37 @@ impl MutxError {
     pub fn exit_code(&self) -> i32 {
         match self {
             MutxError::LockTimeout { .. } | MutxError::LockWouldBlock(_) => 2,
+            // On Windows, lock failures may come through as LockAcquisitionFailed
+            // with raw_os_error 33 (ERROR_LOCK_VIOLATION) instead of WouldBlock
+            MutxError::LockAcquisitionFailed { source, .. }
+                if Self::is_lock_contention_error(source) =>
+            {
+                2
+            }
             MutxError::Interrupted => 3,
             MutxError::PermissionDenied(_) => 1,
             MutxError::Io(e) if e.kind() == io::ErrorKind::PermissionDenied => 1,
             MutxError::Io(e) if e.kind() == io::ErrorKind::Interrupted => 3,
             _ => 1,
         }
+    }
+
+    /// Check if an I/O error indicates lock contention (file locked by another process)
+    fn is_lock_contention_error(e: &io::Error) -> bool {
+        // Check for WouldBlock (Unix)
+        if e.kind() == io::ErrorKind::WouldBlock {
+            return true;
+        }
+        // Check for Windows-specific lock errors
+        // ERROR_LOCK_VIOLATION (33) - file region is locked
+        // ERROR_SHARING_VIOLATION (32) - file in use by another process
+        #[cfg(windows)]
+        if let Some(code) = e.raw_os_error() {
+            if code == 33 || code == 32 {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn lock_timeout(duration: Duration) -> Self {
