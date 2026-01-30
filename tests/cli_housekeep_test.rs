@@ -79,5 +79,8 @@ fn test_housekeep_requires_subcommand() {
     cmd.arg("housekeep")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("Usage: mutx housekeep <COMMAND>"));
+        // Check for key parts of the usage message, avoiding platform-specific binary name
+        .stderr(predicate::str::contains("housekeep <COMMAND>"))
+        .stderr(predicate::str::contains("locks"))
+        .stderr(predicate::str::contains("backups"));
 }
